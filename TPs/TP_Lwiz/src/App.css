@@ -4,45 +4,50 @@ html, body, #root {
   margin: 0;
 }
 
-body {
+
+html, body {
   font-family: "Source Code Pro", monospace;
-  background: #0a0a0a;
-  overflow: hidden;
+  height: 100%;
   margin: 0;
+  background: #210049;
+  overflow: hidden;
 }
 
+#root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .layout {
   display: flex;
   gap: 20px;
   padding: 20px;
-  background-color: #0a0a0a;
-  justify-content: center;
-  align-items: flex-start;
   box-sizing: border-box;
-  margin-top: 20px;
+  align-items: center;
 }
 
+
 .stage {
-  background-color: #111;
+  background-color: #210049;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff00ff;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: #111;
+  background-color: #210049;
   padding: 15px;
   border-radius: 8px;
-  color: #00ffcc;
-  text-shadow: 0 0 5px #ff00ff;
+  color: #8d8d8d;
+  border: 1px solid #ED244E;
 }
 
 button {
-  background-color: #ff00ff;
+  background-color: #ED244E;
   border: none;
   padding: 8px 12px;
   border-radius: 4px;
@@ -53,19 +58,19 @@ button {
 }
 
 button:hover {
-  background-color: #00ffff;
+  background-color: #8d8d8d;
   color: #111;
 }
 
 input[type="range"] {
   width: 100%;
-  accent-color: #ff00ff;
+  accent-color: #ED244E;
 }
 
 select {
-  background-color: #111;
-  color: #00ffcc;
-  border: 1px solid #ff00ff;
+  background-color: #210049;
+  color: #8d8d8d;
+  border: 1px solid #ED244E;
   border-radius: 4px;
   padding: 2px 4px;
 }
