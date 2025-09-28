@@ -1,0 +1,71 @@
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Source Code Pro", monospace;
+  background: #0a0a0a;
+  overflow: hidden;
+  margin: 0;
+}
+
+
+.layout {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: #0a0a0a;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  margin-top: 20px;
+}
+
+.stage {
+  background-color: #111;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff00ff;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #111;
+  padding: 15px;
+  border-radius: 8px;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ff00ff;
+}
+
+button {
+  background-color: #ff00ff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: #0a0a0a;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+button:hover {
+  background-color: #00ffff;
+  color: #111;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #ff00ff;
+}
+
+select {
+  background-color: #111;
+  color: #00ffcc;
+  border: 1px solid #ff00ff;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
