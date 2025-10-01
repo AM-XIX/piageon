@@ -6,36 +6,48 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
   const intervalRef = useRef(null);
   const nextGenRef = useRef(null);
   const cameraRef = useRef(null);
+  const gridRef = useRef([]);
 
   useEffect(() => {
     if (!mountRef.current) return;
     mountRef.current.innerHTML = "";
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a1a);
+
+    const deadColor = 0xefd5ff;
+    const aliveColor = 0x515ada;
+    scene.background = new THREE.Color(deadColor);
 
     const aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
     const fov = 75;
     const spacing = 3;
 
-    // Camera setup
+    // Camera
     const camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
     camera.up.set(0, 0, -1);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    renderer.setSize(
+      mountRef.current.clientWidth,
+      mountRef.current.clientHeight
+    );
     mountRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0x210049, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xefd5ff, 0.3, 50);
+    pointLight.position.set(0, 5, 0);
+    scene.add(pointLight);
 
     const cellSize = 2;
     const cubes = [];
-    let grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(0));
+    gridRef.current = Array.from({ length: gridSize }, () =>
+      Array(gridSize).fill(0)
+    );
 
     function updateCameraPosition(size) {
-      const offset = ((size - 1) / 2) * spacing;
       const distance = size * spacing * 0.7;
       camera.position.set(0, distance, 0);
       camera.lookAt(0, 0, 0);
@@ -43,15 +55,17 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
     updateCameraPosition(gridSize);
 
     const offset = ((gridSize - 1) / 2) * spacing;
+
+    // Création des cubes
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
         const geometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
         const material = new THREE.MeshStandardMaterial({
-          color: 0x210049,
-          emissive: 0x210049,
-          emissiveIntensity: 1.0,
-          roughness: 0.2,
-          metalness: 0.7,
+          color: deadColor,
+          emissive: deadColor,
+          emissiveIntensity: 0.6,
+          roughness: 0.3,
+          metalness: 0.5,
         });
 
         const cube = new THREE.Mesh(geometry, material);
@@ -60,7 +74,11 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
         const edges = new THREE.EdgesGeometry(geometry);
         const line = new THREE.LineSegments(
           edges,
-          new THREE.LineBasicMaterial({ color: 0xaaaaaa })
+          new THREE.LineBasicMaterial({
+            color: 0xffffff,
+            opacity: 0.2,
+            transparent: true,
+          })
         );
         cube.add(line);
 
@@ -69,34 +87,38 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
       }
     }
 
+    // Mise à jour couleur cube
     function updateCubeColor(i, j) {
       const cube = cubes[i * gridSize + j];
-      if (grid[i][j] === 1) {
-        cube.material.emissive.setHex(0xed244e);
-        cube.material.color.setHex(0xed244e);
+      if (gridRef.current[i][j] === 1) {
+        cube.material.emissive.setHex(aliveColor);
+        cube.material.color.setHex(aliveColor);
+        cube.material.emissiveIntensity = 1 + Math.random() * 0.3;
       } else {
-        cube.material.emissive.setHex(0x210049);
-        cube.material.color.setHex(0x210049);
+        cube.material.emissive.setHex(deadColor);
+        cube.material.color.setHex(deadColor);
+        cube.material.emissiveIntensity = 0.6 + Math.random() * 0.2;
       }
     }
 
     function nextGeneration() {
-      const newGrid = grid.map(arr => [...arr]);
+      const oldGrid = gridRef.current;
+      const newGrid = oldGrid.map((row) => [...row]);
+
       for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
           let neighbors = 0;
           for (let di = -1; di <= 1; di++) {
             for (let dj = -1; dj <= 1; dj++) {
               if (di === 0 && dj === 0) continue;
-              const ni = i + di;
-              const nj = j + dj;
-              if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize) {
-                neighbors += grid[ni][nj];
-              }
+              const ni = (i + di + gridSize) % gridSize;
+              const nj = (j + dj + gridSize) % gridSize;
+              neighbors += oldGrid[ni][nj];
             }
           }
+
           newGrid[i][j] =
-            grid[i][j] === 1
+            oldGrid[i][j] === 1
               ? neighbors === 2 || neighbors === 3
                 ? 1
                 : 0
@@ -105,7 +127,8 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
               : 0;
         }
       }
-      grid = newGrid;
+
+      gridRef.current = newGrid;
       for (let i = 0; i < gridSize; i++)
         for (let j = 0; j < gridSize; j++) updateCubeColor(i, j);
     }
@@ -128,13 +151,13 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
         const index = cubes.indexOf(cube);
         const i = Math.floor(index / gridSize);
         const j = index % gridSize;
-        grid[i][j] = grid[i][j] === 0 ? 1 : 0;
+        gridRef.current[i][j] = gridRef.current[i][j] ? 0 : 1;
         updateCubeColor(i, j);
       }
     }
     renderer.domElement.addEventListener("click", onClick);
 
-    function animate() {
+    function animate() { // Animation loop
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     }
@@ -142,7 +165,9 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
 
     // Clear
     function clearHandler() {
-      grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(0));
+      gridRef.current = Array.from({ length: gridSize }, () =>
+        Array(gridSize).fill(0)
+      );
       for (let i = 0; i < gridSize; i++)
         for (let j = 0; j < gridSize; j++) updateCubeColor(i, j);
     }
@@ -160,9 +185,10 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
   useEffect(() => {
     clearInterval(intervalRef.current);
     if (isRunning && nextGenRef.current) {
+      const intervalSpeed = 2000 - speed + 50;
       intervalRef.current = setInterval(() => {
         nextGenRef.current();
-      }, speed);
+      }, intervalSpeed);
     }
     return () => clearInterval(intervalRef.current);
   }, [isRunning, speed]);
