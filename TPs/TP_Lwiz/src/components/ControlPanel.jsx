@@ -7,6 +7,7 @@ export default function ControlPanel({
   setGridSize,
 }) {
   return (
+    // Control Panel UI
     <div className="panel" style={{ color: "#8d8d8d" }}>
       <button onClick={() => setIsRunning(!isRunning)}>
         {isRunning ? "Stop" : "Start"}
