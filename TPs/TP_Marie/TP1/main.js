@@ -153,7 +153,6 @@ function updateInstance(i) {
 }
 
 /* -------------------- Game of Life logic -------------------- */
-/* Standard Conway rules, toroidal wrap (edges wrap-around). Wrap chosen for simplicity and to avoid boundary "evaporation". */
 function stepGeneration() {
   const s = size;
   for (let y = 0; y < s; y++) {
