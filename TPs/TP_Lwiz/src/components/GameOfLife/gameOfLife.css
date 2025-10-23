@@ -1,0 +1,81 @@
+html, body {
+  font-family: "Source Code Pro", monospace;
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(90deg, #efd5ff 0%, #515ada 100%);
+  overflow: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layout {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+.stage {
+  background: linear-gradient(90deg, #efd5ff 0%, #515ada 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(237, 36, 78, 0.4);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  color: #fff;
+  border: 2px solid #efd5ff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+button {
+  background-color: #efd5ff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #515ada;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(255, 213, 255, 0.5);
+}
+
+button:hover {
+  background-color: #cdb3ff;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 213, 255, 0.7);
+}
+
+label {
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #efd5ff;
+  border-radius: 6px;
+}
+
+select {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid #efd5ff;
+  border-radius: 6px;
+  padding: 4px 6px;
+  box-shadow: 0 0 10px rgba(255, 213, 255, 0.3);
+}
