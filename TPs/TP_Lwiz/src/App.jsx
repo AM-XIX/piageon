@@ -1,7 +1,7 @@
 import { useState } from "react";
 // import GameOfLife from "./components/GameOfLife/GameOfLife";
 // import ControlPanel from "./components/GameOfLife/ControlPanel";
-import MandelbrotTerrain from "./components/Mandelbrot";
+import MandelbrotTerrain from "./components/MandelBrot/Mandelbrot";
 
 export default function App() {
   const [isRunning, setIsRunning] = useState(false);
