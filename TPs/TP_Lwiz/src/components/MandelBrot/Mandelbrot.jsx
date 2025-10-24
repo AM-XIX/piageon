@@ -1,9 +1,12 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { Noise } from "noisejs";
 
-function generateDoubleMandelbrotIsland(size = 200, segments = 256) {
-  // Height function based on Mandelbrot set
+// Terrain generation with double Mandelbrot sets
+function generateDoubleMandelbrotIsland(size = 600, segments = 512) {
+  const noise = new Noise(Math.random());
+
   function mandelbrotHeight(
     x,
     y,
@@ -14,18 +17,17 @@ function generateDoubleMandelbrotIsland(size = 200, segments = 256) {
   ) {
     let a = x / zoom + offsetX;
     let b = y / zoom + offsetY;
-    let ca = a;
-    let cb = b;
+    const ca = a;
+    const cb = b;
     let n = 0;
     for (; n < maxIter; n++) {
-      // Mandelbrot iteration loop
       const aa = a * a - b * b;
       const bb = 2 * a * b;
       a = aa + ca;
       b = bb + cb;
       if (a * a + b * b > 16) break;
     }
-    return n / maxIter; // normalize height
+    return n / maxIter;
   }
 
   const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
@@ -35,36 +37,43 @@ function generateDoubleMandelbrotIsland(size = 200, segments = 256) {
   const radius = size / 2;
   const colors = [];
 
-  // Generate terrain heights and colors
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
     const dist = Math.sqrt(x * x + z * z) / radius;
 
-    const mask = dist <= 1 ? Math.max(0, 1 - dist * dist) : 0;
+    const mask = dist <= 1 ? Math.pow(1 - dist, 2.8) : 0;
 
-    // combine multiple Mandelbrot-based height layers
-    // first mandelbrot island
-    let h1 = mandelbrotHeight(x * 0.03, z * 0.03) * 0.5;
-    h1 += mandelbrotHeight(x * 0.06 + 10, z * 0.06 - 5) * 0.3;
-    // second mandelbrot island
+    // Mandelbrot base
+    let h1 = mandelbrotHeight(x * 0.015, z * 0.015) * 0.5;
+    h1 += mandelbrotHeight(x * 0.03 + 10, z * 0.03 - 5) * 0.3;
+
     let h2 =
-      mandelbrotHeight((x + 15) * 0.04, (z - 12) * 0.04, 2.0, -0.4, 0.1) * 0.4;
+      mandelbrotHeight((x + 15) * 0.02, (z - 12) * 0.02, 2.0, -0.4, 0.1) * 0.4;
     h2 +=
-      mandelbrotHeight((x - 8) * 0.05, (z + 5) * 0.05, 3.0, -0.3, 0.2) * 0.25;
+      mandelbrotHeight((x - 8) * 0.025, (z + 5) * 0.025, 3.0, -0.3, 0.2) * 0.25;
 
-    // Final height calculation
-    let h = Math.pow(h1 + h2, 0.9) * 8 * mask;
-    h += Math.random() * 0.8; // Noise for realism
+    // Noise details
+    const n1 =
+      0.4 * noise.simplex2(x * 0.01, z * 0.01) +
+      0.2 * noise.simplex2(x * 0.04, z * 0.04) +
+      0.1 * noise.simplex2(x * 0.1, z * 0.1);
+
+      // Final height calculation
+    let h = (h1 + h2) * 12 * mask;
+    h += n1 * 8 * mask;
+    h *= 0.9 + 0.2 * Math.sin(dist * Math.PI);
+    h += Math.random() * 0.3;
+
     pos.setY(i, h);
 
-    // color based on height
+    // Height based coloring
     const color = new THREE.Color();
-    if (h < 1.5) color.setHex(0x331a0f);
-    else if (h < 4) color.setHex(0x553322);
-    else if (h < 7) color.setHex(0x887766);
-    else if (h < 9) color.setHex(0xbb9988);
-    else color.setHex(0xddd0b0);
+    if (h < 1.5) color.setHex(0x223344);
+    else if (h < 3) color.setHex(0x3a5f3a);
+    else if (h < 5.5) color.setHex(0x6b8e23);
+    else if (h < 8) color.setHex(0x8b7765);
+    else color.setHex(0xe0e0e0);
 
     color.offsetHSL(0, 0, (Math.random() - 0.5) * 0.05);
     colors.push(color.r, color.g, color.b);
@@ -72,15 +81,19 @@ function generateDoubleMandelbrotIsland(size = 200, segments = 256) {
 
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
+  geometry.normalizeNormals();
+
   return geometry;
 }
 
+// Rendering component for the Mandelbrot terrain
 export default function MandelbrotTerrain({ width = 400, height = 300 }) {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
+
     if (rendererRef.current) {
       mountRef.current.removeChild(rendererRef.current.domElement);
       rendererRef.current.dispose();
@@ -88,13 +101,10 @@ export default function MandelbrotTerrain({ width = 400, height = 300 }) {
     }
 
     const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0a0a0a, 200, 800);
 
-    // fog for depth effect
-    scene.fog = new THREE.Fog(0x0a0a0a, 60, 500);
-
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.set(0, 80, 150);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 2000);
+    camera.position.set(0, 200, 400);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
@@ -102,34 +112,50 @@ export default function MandelbrotTerrain({ width = 400, height = 300 }) {
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // terrain generation
-    const geometry = generateDoubleMandelbrotIsland(200, 256);
+    // 
+    const geometry = generateDoubleMandelbrotIsland(600, 512);
     const material = new THREE.MeshStandardMaterial({
       vertexColors: true,
       roughness: 1,
-      metalness: 0.2,
+      metalness: 0.1,
     });
     const terrain = new THREE.Mesh(geometry, material);
+    terrain.castShadow = true;
+    terrain.receiveShadow = true;
     scene.add(terrain);
 
-    // lights
-    const dirLight = new THREE.DirectionalLight(0xfff0c8, 1.2);
-    dirLight.position.set(50, 100, 50);
-    scene.add(dirLight);
+    // Water plane around the island
+    const waterGeom = new THREE.PlaneGeometry(2000, 2000, 1, 1);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x1e3f66,
+      transparent: true,
+      opacity: 0.7,
+      roughness: 0.8,
+      metalness: 0.3,
+    });
+    const water = new THREE.Mesh(waterGeom, waterMat);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = 0;
+    scene.add(water);
 
-    const fillLight = new THREE.DirectionalLight(0x222244, 0.3);
-    fillLight.position.set(-50, 20, -50);
+    // Lights
+    const sun = new THREE.DirectionalLight(0xfff4cc, 1.3);
+    sun.position.set(200, 300, 200);
+    sun.castShadow = true;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0x223366, 0.3);
+    fillLight.position.set(-200, 100, -200);
     scene.add(fillLight);
 
-    scene.add(new THREE.AmbientLight(0x101010));
+    scene.add(new THREE.AmbientLight(0x202020));
 
-    // controls for orbiting around
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 0, 0);
+    controls.target.set(0, 10, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxDistance = 400;
-    controls.minDistance = 20;
+    controls.maxDistance = 1200;
+    controls.minDistance = 50;
     controls.maxPolarAngle = Math.PI / 2;
 
     let running = true;
@@ -141,19 +167,21 @@ export default function MandelbrotTerrain({ width = 400, height = 300 }) {
     };
     animate();
 
+    // Cleanup
     return () => {
-      // Cleanup on unmount
       running = false;
       renderer.dispose();
       geometry.dispose();
       material.dispose();
-      dirLight.dispose?.();
+      waterGeom.dispose();
+      waterMat.dispose();
+      sun.dispose?.();
       fillLight.dispose?.();
       controls.dispose();
-      if ( // if mountRef and renderer DOM element exist
+      if (
         mountRef.current &&
         renderer.domElement.parentNode === mountRef.current
-      ) { // remove renderer DOM element
+      ) {
         mountRef.current.removeChild(renderer.domElement);
       }
     };
