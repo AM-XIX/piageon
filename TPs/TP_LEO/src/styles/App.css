@@ -7,3 +7,13 @@ html, body, #root { height:100%; margin:0; }
   background:#1b1b1b; color:#eee; border:1px solid #2a2a2a; border-radius:8px; padding:8px 10px;
 }
 .panel button:hover { background:#222; }
+
+/* Home cards */
+.card-link { text-decoration:none; color:inherit; }
+.card {
+  background:#121212; border:1px solid #2a2a2a; border-radius:12px; padding:16px;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.card:hover { transform: translateY(-2px); background:#151515; border-color:#3a3a3a; }
+.card h3 { margin:0 0 6px; }
+.card p { margin:0; opacity:.7; }
