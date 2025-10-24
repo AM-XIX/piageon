@@ -14,10 +14,12 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
 
     const scene = new THREE.Scene();
 
+    // Colors
     const deadColor = 0xefd5ff;
     const aliveColor = 0x515ada;
     scene.background = new THREE.Color(deadColor);
 
+    // Aspect ratio
     const aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
     const fov = 75;
     const spacing = 3;
@@ -34,13 +36,15 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
     );
     mountRef.current.appendChild(renderer.domElement);
 
+
+    // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
-
     const pointLight = new THREE.PointLight(0xefd5ff, 0.3, 50);
     pointLight.position.set(0, 5, 0);
     scene.add(pointLight);
 
+    // Grid setup
     const cellSize = 2;
     const cubes = [];
     gridRef.current = Array.from({ length: gridSize }, () =>
@@ -101,6 +105,7 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
       }
     }
 
+    // Next Generation Logic : check neighbors and update grid
     function nextGeneration() {
       const oldGrid = gridRef.current;
       const newGrid = oldGrid.map((row) => [...row]);
@@ -143,15 +148,16 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
+      // Raycasting to find intersected cubes
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(cubes, false);
 
-      if (intersects.length > 0) {
+      if (intersects.length > 0) { // If a cube is clicked
         const cube = intersects[0].object;
         const index = cubes.indexOf(cube);
         const i = Math.floor(index / gridSize);
         const j = index % gridSize;
-        gridRef.current[i][j] = gridRef.current[i][j] ? 0 : 1;
+        gridRef.current[i][j] = gridRef.current[i][j] ? 0 : 1; // Update grid state
         updateCubeColor(i, j);
       }
     }
@@ -173,6 +179,7 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
     }
     window.addEventListener("clearGrid", clearHandler);
 
+    // Cleanup on unmount
     return () => {
       renderer.domElement.removeEventListener("click", onClick);
       window.removeEventListener("clearGrid", clearHandler);
@@ -182,6 +189,8 @@ export default function Scene({ isRunning, speed, gridSize = 10 }) {
     };
   }, [gridSize]);
 
+
+  // Handle isRunning and speed changes
   useEffect(() => {
     clearInterval(intervalRef.current);
     if (isRunning && nextGenRef.current) {
