@@ -1,4 +1,14 @@
-# game-of-life
+# Piageon
 
+## Thème : Autres Mondes
+Un monde virtuel
 
-<img width="400" height="430" alt="iuy9fxt300811" src="https://github.com/user-attachments/assets/4ce873c4-c8a1-4cac-89c4-529027786a2e" />
+Les pigeons comme vous n'en avez jamais vu ! 
+Plongez au cœur de l'Île aux Pigeons, un lieu de non-droit où chacun veut imposer son régime politique, mais où cette recherche absolue pourrait bien mener à leur perte...
+
+Entre IA et loi de la nature, génération de lieus avec des contraintes techniques :
+- Automates cellulaires (vie)
+- Fractals (Mandel)
+- Lsystem (végétation)
+- Evolution (Algo gen)
+- Intelligence (réseaux de neurones)
