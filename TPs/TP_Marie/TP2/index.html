@@ -53,7 +53,7 @@
     <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
 
     <script>
-        // main.js embarqué
+        //js embarqué
         (function () {
             const container = document.getElementById('container');
 
@@ -63,7 +63,7 @@
             renderer.setSize(container.clientWidth, container.clientHeight);
             container.appendChild(renderer.domElement);
 
-            // Scene + camera (orthographic for a full-screen quad)
+            // Scene + camera 
             const scene = new THREE.Scene();
             const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
@@ -74,7 +74,7 @@
             const material = new THREE.ShaderMaterial({
                 uniforms: {
                     u_resolution: { value: new THREE.Vector2(container.clientWidth, container.clientHeight) },
-                    u_zoom: { value: 3.0 }, // initial width of the view in complex plane
+                    u_zoom: { value: 3.0 },
                     u_offset: { value: new THREE.Vector2(-0.5, 0.0) },
                     u_iterations: { value: 200 },
                     u_time: { value: 0.0 },
@@ -98,13 +98,13 @@
         uniform float u_aspect;
 
         vec3 palette(float t) {
-  // Définition des couleurs clés (gradient)
+  // Définition des couleurs (gradient)
   vec3 c1 = vec3(0.0, 0.2, 0.8);  // bleu
   vec3 c2 = vec3(0.4, 0.0, 0.6);  // violet
   vec3 c3 = vec3(0.9, 0.2, 0.7);  // rose
   vec3 c4 = vec3(1.0, 0.9, 0.4);  // jaune
   
-  // Interpolation entre les 4 couleurs
+  // Interpolation entre les couleurs
   if (t < 0.33) {
     return mix(c1, c2, smoothstep(0.0, 0.33, t));
   } else if (t < 0.66) {
@@ -116,11 +116,10 @@
 
 
         void main(){
-          // Map pixel to complex plane
-          vec2 uv = v_uv - 0.5;
-          uv.x *= u_aspect; // correct aspect
 
-          // Scale by zoom and add offset (u_zoom represents span width)
+          vec2 uv = v_uv - 0.5;
+          uv.x *= u_aspect; 
+
           vec2 c = uv * u_zoom + u_offset;
 
           vec2 z = vec2(0.0);
@@ -129,7 +128,7 @@
           float escapeRadius = 4.0;
 
           // Iterate
-          for(float i=0.0; i<1000.0; i++){ // loop upper bound safe-guard
+          for(float i=0.0; i<1000.0; i++){ 
             if(i >= maxIter) break;
             // z = z^2 + c
             float x = (z.x*z.x - z.y*z.y) + c.x;
@@ -147,7 +146,7 @@
           }
 
           if(iter == 0.0) {
-            // inside the set -> black
+            // inside black
             gl_FragColor = vec4(0.0,0.0,0.0,1.0);
           } else {
             float t = iter / maxIter;
@@ -161,7 +160,7 @@
             const mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
-            // Handle resize
+            // Resize
             function onResize() {
                 const w = container.clientWidth;
                 const h = container.clientHeight;
@@ -192,21 +191,20 @@
                 const dy = e.clientY - lastY;
                 lastX = e.clientX; lastY = e.clientY;
 
-                // Convert pixel delta to complex-plane delta
+
                 const w = container.clientWidth;
                 const h = container.clientHeight;
                 const aspect = w / h;
                 const zoom = material.uniforms.u_zoom.value;
 
-                // A drag along x moves by (dx/w) * zoom * aspect
                 const moveX = -dx / w * zoom * aspect;
-                const moveY = dy / h * zoom; // positive y screen -> negative imaginary
+                const moveY = dy / h * zoom;
 
                 material.uniforms.u_offset.value.x += moveX;
                 material.uniforms.u_offset.value.y += moveY;
             });
 
-            // Wheel zoom centered at mouse
+            // Wheel zoom
             container.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -218,7 +216,6 @@
                 const aspect = material.uniforms.u_aspect.value;
                 const zoom = material.uniforms.u_zoom.value;
 
-                // Complex coordinate under mouse before zoom
                 const cx = ndcX * zoom * aspect + material.uniforms.u_offset.value.x;
                 const cy = ndcY * zoom + material.uniforms.u_offset.value.y;
 
@@ -229,7 +226,6 @@
                 newZoom = Math.max(1e-10, Math.min(4e3, newZoom));
                 material.uniforms.u_zoom.value = newZoom;
 
-                // adjust offset so the point under the cursor remains fixed
                 material.uniforms.u_offset.value.x = cx - ndcX * newZoom * aspect;
                 material.uniforms.u_offset.value.y = cy - ndcY * newZoom;
             }, { passive: false });
@@ -253,8 +249,7 @@
             // Initial resize
             onResize();
 
-            // Optional: increase iterations when zooming in
-            // We'll adapt iterations based on zoom for better detail
+            // Adapt iterations based on zoom for better detail
             (function adaptIterations() {
                 const base = 200;
                 function update() {
