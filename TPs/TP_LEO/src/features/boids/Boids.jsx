@@ -9,7 +9,7 @@ const MAX_FORCE = 0.03;
 const PERCEPTION = 2.5; // rayon de perception
 const SEP_RADIUS = 1.0; // rayon court pour séparation
 
-const W_SEP = 1.5; // poids des 3 forces
+const W_SEP = 1.5; // séparation
 const W_ALI = 1.0; // alignement
 const W_COH = 0.8; // cohésion
 
