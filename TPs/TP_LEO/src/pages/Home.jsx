@@ -29,6 +29,12 @@ export default function Home() {
               <p>Planète fractale</p>
             </div>
           </Link>
+          <Link to="/tp/boids" className="card-link">
+            <div className="card">
+              <h3>Boids - TP3</h3>
+              <p>Autonomous Character</p>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
