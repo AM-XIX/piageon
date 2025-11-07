@@ -1,7 +1,8 @@
 import { useState } from "react";
 // import GameOfLife from "./components/GameOfLife/GameOfLife";
 // import ControlPanel from "./components/GameOfLife/ControlPanel";
-import MandelbrotTerrain from "./components/MandelBrot/Mandelbrot";
+// import MandelbrotTerrain from "./components/MandelBrot/Mandelbrot";
+import BoidsGeneration from "./components/Boids/BoidsGeneration.jsx";
 
 export default function App() {
   const [isRunning, setIsRunning] = useState(false);
@@ -9,8 +10,8 @@ export default function App() {
   const [gridSize, setGridSize] = useState(10);
 
   // height & width for MandelbrotTerrain based on window size
-  const mandelbrotWidth = window.innerWidth * 0.9;
-  const mandelbrotHeight = window.innerHeight * 0.9;
+  // const mandelbrotWidth = window.innerWidth * 0.9;
+  // const mandelbrotHeight = window.innerHeight * 0.9;
 
   return (
     <div className="layout">
@@ -24,7 +25,9 @@ export default function App() {
         setGridSize={setGridSize}
       />*/}
 
-      <MandelbrotTerrain width={mandelbrotWidth} height={mandelbrotHeight} />
+      {/* <MandelbrotTerrain width={mandelbrotWidth} height={mandelbrotHeight} /> */}
+
+      <BoidsGeneration />
 
     </div>
   );
