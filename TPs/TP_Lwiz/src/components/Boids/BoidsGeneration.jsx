@@ -53,23 +53,56 @@ export default function BoidsGeneration() {
     const fillLight = new THREE.AmbientLight(0xbccad3, 1.4);
     scene.add(fillLight);
 
-    // Birds with 3D model + Boids
+    // Decor (buildings)
+    const buildingGroup = new THREE.Group();
+    scene.add(buildingGroup);
+
+    const buildingMaterial = new THREE.MeshStandardMaterial({
+      color: 0x5a5a5a,
+      roughness: 0.9,
+      metalness: 0.1,
+    });
+
+    for (let i = 0; i < 12; i++) {
+      const width = 1 + Math.random() * 2;
+      const height = 2 + Math.random() * 6;
+      const depth = 1 + Math.random() * 2;
+
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      const mesh = new THREE.Mesh(geometry, buildingMaterial);
+
+      mesh.position.set(
+        (Math.random() - 0.5) * 25,
+        height / 2,
+        (Math.random() - 0.5) * 25
+      );
+
+      // Random slight rotations and scaling for variety
+      mesh.rotation.y = Math.random() * Math.PI;
+      mesh.rotation.z = (Math.random() - 0.5) * 0.2;
+      mesh.scale.y *= 1 - Math.random() * 0.2;
+      geometry.translate(0, -Math.random() * 0.3, 0);
+
+      buildingGroup.add(mesh);
+    }
+
+    // Boids logic
     const birdGroup = new THREE.Group();
     scene.add(birdGroup);
     const loader = new GLTFLoader();
-    const birdCount = 20;
+    const birdCount = 15;
     const birds = [];
 
     const boidSettings = {
       neighborDist: 3,
       separationDist: 1,
-      maxSpeed: 0.02,
+      maxSpeed: 0.025,
       maxForce: 0.001,
     };
 
     for (let i = 0; i < birdCount; i++) {
       loader.load("/models/bird.glb", (gltf) => {
-        const birdPivot = new THREE.Group();
+        const birdPivot = new THREE.Group(); // Pivot : allows easy rotation
         birdPivot.position.set(
           Math.random() * 20 - 10,
           3 + Math.random() * 3,
@@ -85,7 +118,7 @@ export default function BoidsGeneration() {
 
         const mixer =
           gltf.animations.length > 0 ? new THREE.AnimationMixer(bird) : null;
-        if (mixer) mixer.clipAction(gltf.animations[0]).play();
+        if (mixer) mixer.clipAction(gltf.animations[0]).play(); // Wing flapping animation
 
         birdPivot.userData = {
           velocity: new THREE.Vector3(
@@ -102,6 +135,7 @@ export default function BoidsGeneration() {
       });
     }
 
+    // Post-processing
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
@@ -131,12 +165,15 @@ export default function BoidsGeneration() {
         let count = 0;
 
         birds.forEach((other, j) => {
+          // Iterate through all birds
           if (idx === j) return;
           const d = bird.position.distanceTo(other.position);
           if (d < boidSettings.neighborDist) {
+            // If within neighbor distance
             align.add(other.userData.velocity);
             cohesion.add(other.position);
             if (d < boidSettings.separationDist) {
+              // If too close, steer away
               let diff = bird.position.clone().sub(other.position);
               diff.divideScalar(d);
               separation.add(diff);
@@ -146,6 +183,7 @@ export default function BoidsGeneration() {
         });
 
         if (count > 0) {
+          // If there are neighbors
           align.divideScalar(count);
           limitVector(align, boidSettings.maxForce);
 
@@ -159,11 +197,23 @@ export default function BoidsGeneration() {
           v.add(align).add(cohesion).add(separation);
         }
 
+        buildingGroup.children.forEach((b) => {
+          const d = bird.position.distanceTo(b.position);
+          const radius =
+            (b.geometry.parameters.width + b.geometry.parameters.depth) / 2;
+          if (d < radius + 1.5) {
+            const avoid = bird.position.clone().sub(b.position);
+            avoid.normalize();
+            avoid.multiplyScalar(boidSettings.maxForce * 10);
+            v.add(avoid);
+          }
+        });
+
         limitVector(v, boidSettings.maxSpeed);
         bird.userData.velocity.copy(v);
         bird.position.add(bird.userData.velocity);
 
-        // garder dans la zone
+        // We check bounds to keep birds in the scene
         if (bird.position.x > 10) bird.position.x = -10;
         if (bird.position.x < -10) bird.position.x = 10;
         if (bird.position.y > 8) bird.position.y = 8;
@@ -171,13 +221,11 @@ export default function BoidsGeneration() {
         if (bird.position.z > 10) bird.position.z = -10;
         if (bird.position.z < -10) bird.position.z = 10;
 
-        // orientation
         const dir = bird.userData.velocity.clone();
         if (dir.length() > 0.001) {
           bird.rotation.y = Math.atan2(-dir.z, dir.x) + Math.PI;
         }
 
-        // battement d’ailes
         const model = bird.children[0];
         if (bird.userData.mixer) bird.userData.mixer.update(delta);
         else
