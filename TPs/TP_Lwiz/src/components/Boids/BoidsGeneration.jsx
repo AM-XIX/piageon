@@ -63,6 +63,7 @@ export default function BoidsGeneration() {
       metalness: 0.1,
     });
 
+    // Generate random buildings
     for (let i = 0; i < 12; i++) {
       const width = 1 + Math.random() * 2;
       const height = 2 + Math.random() * 6;
@@ -77,7 +78,7 @@ export default function BoidsGeneration() {
         (Math.random() - 0.5) * 25
       );
 
-      // Random slight rotations and scaling for variety
+      // Random rotations and scaling for variety
       mesh.rotation.y = Math.random() * Math.PI;
       mesh.rotation.z = (Math.random() - 0.5) * 0.2;
       mesh.scale.y *= 1 - Math.random() * 0.2;
@@ -100,9 +101,9 @@ export default function BoidsGeneration() {
       maxForce: 0.001,
     };
 
-    for (let i = 0; i < birdCount; i++) {
+    for (let i = 0; i < birdCount; i++) { // Load bird model
       loader.load("/models/bird.glb", (gltf) => {
-        const birdPivot = new THREE.Group(); // Pivot : allows easy rotation
+        const birdPivot = new THREE.Group();
         birdPivot.position.set(
           Math.random() * 20 - 10,
           3 + Math.random() * 3,
