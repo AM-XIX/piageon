@@ -31,8 +31,8 @@ export default function Home() {
           </Link>
           <Link to="/tp/boids" className="card-link">
             <div className="card">
-              <h3>Boids - TP3</h3>
-              <p>Autonomous Character</p>
+              <h3>Boids & Algo Gen - TP3 & 4</h3>
+              <p>Autonomous Character & Algorithmes Génétiques</p>
             </div>
           </Link>
         </div>

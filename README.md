@@ -11,4 +11,8 @@ Entre IA et loi de la nature, l'objectif du projet réside en la génération d'
 - Fractals (Mandel) = Map (espace plane)
 - Lsystem = Végétation
 - Evolution (Algo gen) = Gènes des différents partis politiques représentés sous forme de couleur
+<<<<<<< HEAD
 - Intelligence (réseaux de neurones) = Regroupement des pigeons en fonction de leurs convictions (clustering)
+=======
+- Intelligence (réseaux de neurones) = Regroupement des pigeons en fonction de leurs convictions (clustering)
+>>>>>>> 600c5e7 (setup general : scene & camera interactive + skybox)
