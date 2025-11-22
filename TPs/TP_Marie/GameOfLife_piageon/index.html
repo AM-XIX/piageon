@@ -1,0 +1,91 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="fr">
+<link rel="icon" href="data:,">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Conway's Game of Life — three.js (corrigé)</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: system-ui, Segoe UI, Roboto, Arial
+        }
+
+        #canvas-holder {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            left: 0;
+            top: 0
+        }
+
+        #ui {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            z-index: 10
+        }
+
+        #ui input[type=number] {
+            width: 72px
+        }
+
+        #ui input[type=range] {
+            vertical-align: middle
+        }
+
+        #ui button {
+            margin: 4px
+        }
+
+        .small {
+            font-size: 12px;
+            color: #333
+        }
+    </style>
+</head>
+<div id="canvas-holder">
+
+    <body>
+
+        <div id="ui">
+            <div>
+                <button id="start">Démarrer</button>
+                <button id="stop" disabled>Arrêter</button>
+                <button id="step">Step</button>
+            </div>
+            <div style="margin-top:6px">
+                <button id="random">Aléa</button>
+                <button id="clear">Vider</button>
+            </div>
+            <div style="margin-top:8px">
+                Taille: <input id="size" type="number" min="8" max="256" value="32">
+                Cellule alive %: <input id="density" type="number" min="0" max="100" value="30">
+            </div>
+            <div style="margin-top:8px">
+                Vitesse (steps/sec): <input id="speed" type="range" min="1" max="30" value="6"> <span
+                    id="speed-val">6</span>
+            </div>
+            <div class="small" style="margin-top:6px">Cliquez sur une cellule pour basculer son état. Utilise
+                OrbitControls
+                pour zoom/pan/rotate.</div>
+        </div>
+
+
+        <div id="canvas-holder"></div>
+
+
+        <!-- three.js + OrbitControls (non-module) -->
+        <!-- <script src="https://unpkg.com/three@0.155.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.155.0/examples/js/controls/OrbitControls.js"></script> -->
+        <script type="module" src="/main.js"></script>
+    </body>
+</div>
