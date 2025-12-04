@@ -1,4 +1,4 @@
-import { SceneCanvas } from "./3d/SceneCanvas";
+import { SceneCanvas } from "../features/world/components/SceneCanvas";
 
 export default function App() {
   return (

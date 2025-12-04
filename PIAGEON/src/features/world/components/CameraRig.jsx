@@ -3,13 +3,13 @@ import { useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-const MOVE_SPEED = 20; // unités par seconde
+const MOVE_SPEED = 20; //vitesse de déplacement de la cam
 
 export function CameraRig() {
   const controlsRef = useRef(null);
   const keys = useRef({});
 
-  // Gestion des touches (keydown / keyup)
+  //gestion des touches
   useEffect(() => {
     const handleKeyDown = (e) => {
       keys.current[e.code] = true;
@@ -28,7 +28,7 @@ export function CameraRig() {
     };
   }, []);
 
-  // Vecteurs temporaires pour le calcul de la direction
+  //vecteurs temporaires pour le calcul de la direction
   const forward = useRef(new THREE.Vector3());
   const right = useRef(new THREE.Vector3());
   const move = useRef(new THREE.Vector3());
@@ -41,7 +41,7 @@ export function CameraRig() {
     const target = controls.target;
     const k = keys.current;
 
-    // Direction "avant" = de la caméra vers le target projetée sur le sol (XZ)
+    //direction de la cam vers l'avant 
     forward.current.subVectors(target, camera.position);
     forward.current.y = 0;
     if (forward.current.lengthSq() > 0.0001) {
@@ -50,15 +50,15 @@ export function CameraRig() {
       forward.current.set(0, 0, -1);
     }
 
-    // Direction "droite"
+    //direction de la cam vers la droite 
     right.current
       .crossVectors(forward.current, camera.up)
       .normalize();
 
-    // Réinitialise le mouvement
+    //réinitialisation du mouvement
     move.current.set(0, 0, 0);
 
-    // Avancer / reculer
+    //avant / arrière
     if (k["KeyW"] || k["ArrowUp"]) { // touche Z + flèches up
       move.current.add(forward.current);
     }
@@ -66,7 +66,7 @@ export function CameraRig() {
       move.current.sub(forward.current);
     }
 
-    // Gauche / droite
+    //gauche / droite
     if (k["KeyA"] || k["ArrowLeft"]) { // touche A + flèches left
       move.current.sub(right.current);
     }
@@ -74,7 +74,7 @@ export function CameraRig() {
       move.current.add(right.current);
     }
 
-    // Monter / Descendre
+    //up / down
     if (k["Space"]) { // barre espace
       move.current.y += 1;
     }
@@ -87,7 +87,7 @@ export function CameraRig() {
         .normalize()
         .multiplyScalar(MOVE_SPEED * delta);
 
-      // Déplacement de la caméra et de le target pour garder le même angle d’orbite
+      //déplacement de la caméra et de la target pour garder le même angle d’orbite
       camera.position.add(move.current);
       target.add(move.current);
 
