@@ -1,9 +1,8 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
-import pigeonUrl from "../../../assets/models/pigeon.glb";
 
 export function usePigeonModel() {
-  const gltf = useGLTF(pigeonUrl);
+  const gltf = useGLTF("../../../public/pigeon.glb");
 
   const mesh = useMemo(() => {
     let found = null;
