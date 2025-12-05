@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { CameraRig } from "./CameraRig.jsx";
-import { Ground } from "./Ground.jsx";
+import Ground from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
 import { PigeonAutomaton } from "../../pigeons/components/PigeonAutomaton.jsx";
 
