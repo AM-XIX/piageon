@@ -6,11 +6,13 @@ export function PigeonFlock({
   initialCount = 1000,
   interactionRadius = 3,
   worldHalfSize = 150,
+  timeScale = 1,
 }) {
   const { agentsRef } = usePigeonSimulation({
     initialCount,
     interactionRadius,
     worldHalfSize,
+    timeScale,
   });
   const { scene } = usePigeonModel();
 

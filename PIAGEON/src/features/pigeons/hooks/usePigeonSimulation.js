@@ -9,6 +9,7 @@ export function usePigeonSimulation({
   initialCount = 5000,
   interactionRadius = 3,
   worldHalfSize = 150,
+  timeScale = 1,
 }) {
   const agentsRef = useRef([]);
   const nextIdRef = useRef(initialCount);
@@ -27,6 +28,7 @@ export function usePigeonSimulation({
   }, [initialCount, worldHalfSize]);
 
   useFrame((_, dt) => {
+    const scaledDt = dt * timeScale;
     const agents = agentsRef.current;
 
     // cerveau / clustering
@@ -35,7 +37,7 @@ export function usePigeonSimulation({
     }
 
     // boids
-    updateBoids(agents, dt, {
+    updateBoids(agents, scaledDt, {
       worldHalfSize,
       wanderStrength: 0.6,
     });
@@ -61,7 +63,7 @@ export function usePigeonSimulation({
 
     // contraintes simples
     for (const a of agents) {
-      a.age += dt;
+      a.age += scaledDt;
     }
   });
 

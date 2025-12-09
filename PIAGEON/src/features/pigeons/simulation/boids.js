@@ -86,7 +86,7 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength) {
     steering.add(separation).add(alignment).add(cohesion);
   }
 
-  // Encourage clustering with allies to keep factions together
+  // encourage le  clustering avec les alliés pour garder les parties ensembles
   if (allies > 0 && (params.allyPull ?? 0) > 0) {
     allyCohesion.divideScalar(allies).sub(p.position);
     allyCohesion.y = 0;

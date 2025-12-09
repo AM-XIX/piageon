@@ -12,7 +12,9 @@ export default function App() {
       </main>
 
       <footer className="ui-footer">
-        <span>Contrôle de la direction de la caméra avec les <strong>Flèches</strong> et <strong>ZQSD</strong> & <strong>Space / Shift</strong> pour monter et descendre</span>
+        <span>
+          Contrôle de la direction de la caméra avec les <strong>Flèches</strong> et <strong>ZQSD</strong> & <strong>Space / Shift</strong> pour monter et descendre — Maintenir <strong>F</strong> pour accélérer le temps
+        </span>
       </footer>
     </div>
   );
