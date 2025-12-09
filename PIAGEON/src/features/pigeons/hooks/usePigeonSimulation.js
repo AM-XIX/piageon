@@ -47,8 +47,9 @@ export function usePigeonSimulation({
       worldHalfSize,
       onAgentKilled: (deadAgent) => {
         const spawnPos = deadAgent.position.clone();
-        spawnPos.x += (Math.random() - 0.5) * 2;
-        spawnPos.z += (Math.random() - 0.5) * 2;
+        spawnPos.x = (Math.random() * 2 - 1) * (worldHalfSize - 1);
+        spawnPos.z = (Math.random() * 2 - 1) * (worldHalfSize - 1);
+        spawnPos.y = 0;
         agents.push(
           createNeutralPigeon({
             id: nextIdRef.current++,

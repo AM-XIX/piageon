@@ -91,10 +91,10 @@ export function resolveInteractions(
       const targetCounts = counts[j];
 
       const action1 = decideInteraction(actor, target, actorCounts, targetCounts);
-      applyAction(action1, target, kills, conversions);
+      applyAction(action1, actor, target, kills, conversions);
 
       const action2 = decideInteraction(target, actor, targetCounts, actorCounts);
-      applyAction(action2, actor, kills, conversions);
+      applyAction(action2, target, actor, kills, conversions);
     }
   }
 
@@ -128,7 +128,7 @@ export function resolveInteractions(
   return changed;
 }
 
-function applyAction(action, target, kills, conversions) {
+function applyAction(action, actor, target, kills, conversions) {
   if (!action) return;
   if (action.type === "kill") {
     kills.add(target.id);
@@ -136,6 +136,8 @@ function applyAction(action, target, kills, conversions) {
     if (!kills.has(target.id)) {
       conversions.set(target.id, action.party);
     }
+  } else if (action.type === "selfKill") {
+    kills.add(actor.id);
   }
 }
 
@@ -199,10 +201,15 @@ function decideInteraction(actor, target, actorCounts, targetCounts) {
       break;
 
     case PARTIES.FASCIST: {
-      if (
-        target.party === PARTIES.NEUTRAL ||
-        target.party === PARTIES.FASCIST
-      ) {
+      if (target.party === PARTIES.COMMUNIST) {
+        // 70% chance to convert a communist, otherwise kill them
+        if (Math.random() < 0.7) {
+          return { type: "convert", party: PARTIES.FASCIST };
+        }
+        return { type: "kill" };
+      }
+
+      if (target.party === PARTIES.NEUTRAL) {
         return { type: "convert", party: PARTIES.FASCIST };
       }
 
@@ -218,7 +225,14 @@ function decideInteraction(actor, target, actorCounts, targetCounts) {
 
     case PARTIES.ANARCHIST:
       if (actor.id === target.id) return null;
-      return { type: "convert", party: PARTIES.ANARCHIST };
+      if (target.party === PARTIES.NEUTRAL) {
+        return { type: "convert", party: PARTIES.ANARCHIST };
+      }
+      // 50% chance to convert non-neutral, otherwise die
+      if (Math.random() < 0.5) {
+        return { type: "convert", party: PARTIES.ANARCHIST };
+      }
+      return { type: "selfKill" };
 
     default:
       break;
