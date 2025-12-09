@@ -2,7 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { CameraRig } from "./CameraRig.jsx";
 import { Ground } from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
-import { PigeonAutomaton } from "../../pigeons/components/PigeonAutomaton.jsx";
+import { PigeonFlock } from "../../pigeons/components/PigeonFlock.jsx";
 
 export function SceneCanvas() {
   return (
@@ -21,7 +21,7 @@ export function SceneCanvas() {
 
       <Ground />
 
-      <PigeonAutomaton />
+      <PigeonFlock initialCount={70} interactionRadius={3} />
       
     </Canvas>
   );
