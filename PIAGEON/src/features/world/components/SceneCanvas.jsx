@@ -39,7 +39,13 @@ export function SceneCanvas() {
 
       <Ground />
 
-      <PigeonFlock initialCount={1000} interactionRadius={3} timeScale={timeScale} />
+      <PigeonFlock
+        initialCount={100}
+        interactionRadius={3}
+        worldHalfSize={40}
+        timeScale={timeScale}
+        groundY={18}
+      />
       
     </Canvas>
   );

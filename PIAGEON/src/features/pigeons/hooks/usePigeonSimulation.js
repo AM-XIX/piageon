@@ -6,10 +6,11 @@ import { createNeutralPigeon, createRandomPigeon } from "../simulation/pigeonAge
 import { resolveInteractions } from "../simulation/genetics.js";
 
 export function usePigeonSimulation({
-  initialCount = 5000,
+  initialCount = 100,
   interactionRadius = 3,
-  worldHalfSize = 150,
+  worldHalfSize = 40,
   timeScale = 1,
+  groundY = 18,
 }) {
   const agentsRef = useRef([]);
   const nextIdRef = useRef(initialCount);
@@ -19,7 +20,7 @@ export function usePigeonSimulation({
     if (agentsRef.current.length === 0) {
       const agents = [];
       for (let i = 0; i < initialCount; i++) {
-        agents.push(createRandomPigeon({ id: i, worldHalfSize }));
+        agents.push(createRandomPigeon({ id: i, worldHalfSize, groundY }));
       }
       agentsRef.current = agents;
       nextIdRef.current = initialCount;
@@ -40,20 +41,28 @@ export function usePigeonSimulation({
     updateBoids(agents, scaledDt, {
       worldHalfSize,
       wanderStrength: 0.6,
+      groundY,
     });
 
     const changed = resolveInteractions(agents, {
       interactionRadius,
       worldHalfSize,
+      groundY,
       onAgentKilled: (deadAgent) => {
+        const radius = worldHalfSize - 1;
+        const r = Math.sqrt(Math.random()) * radius;
+        const theta = Math.random() * Math.PI * 2;
         const spawnPos = deadAgent.position.clone();
-        spawnPos.x = (Math.random() * 2 - 1) * (worldHalfSize - 1);
-        spawnPos.z = (Math.random() * 2 - 1) * (worldHalfSize - 1);
-        spawnPos.y = 0;
+        spawnPos.set(
+          Math.cos(theta) * r,
+          groundY,
+          Math.sin(theta) * r
+        );
         agents.push(
           createNeutralPigeon({
             id: nextIdRef.current++,
             position: spawnPos,
+            groundY,
           })
         );
       },

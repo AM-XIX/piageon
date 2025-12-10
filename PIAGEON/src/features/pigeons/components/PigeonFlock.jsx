@@ -3,16 +3,18 @@ import { usePigeonModel } from "../hooks/usePigeonModel.js";
 import { PigeonInstance } from "./PigeonInstance.jsx";
 
 export function PigeonFlock({
-  initialCount = 1000,
+  initialCount = 100,
   interactionRadius = 3,
-  worldHalfSize = 150,
+  worldHalfSize = 40,
   timeScale = 1,
+  groundY = 18,
 }) {
   const { agentsRef } = usePigeonSimulation({
     initialCount,
     interactionRadius,
     worldHalfSize,
     timeScale,
+    groundY,
   });
   const { scene } = usePigeonModel();
 

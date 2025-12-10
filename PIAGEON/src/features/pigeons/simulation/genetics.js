@@ -48,6 +48,7 @@ export function resolveInteractions(
     interactionRadius = 3,
     worldHalfSize = 50,
     onAgentKilled,
+    groundY = 0,
   } = {}
 ) {
   if (agents.length === 0) return false;
@@ -122,7 +123,7 @@ export function resolveInteractions(
   }
 
   for (const agent of agents) {
-    clampToBounds(agent, worldHalfSize);
+    clampToBounds(agent, worldHalfSize, groundY);
   }
 
   return changed;
@@ -201,14 +202,6 @@ function decideInteraction(actor, target, actorCounts, targetCounts) {
       break;
 
     case PARTIES.FASCIST: {
-      if (target.party === PARTIES.COMMUNIST) {
-        // 70% chance to convert a communist, otherwise kill them
-        if (Math.random() < 0.7) {
-          return { type: "convert", party: PARTIES.FASCIST };
-        }
-        return { type: "kill" };
-      }
-
       if (target.party === PARTIES.NEUTRAL) {
         return { type: "convert", party: PARTIES.FASCIST };
       }
@@ -241,9 +234,9 @@ function decideInteraction(actor, target, actorCounts, targetCounts) {
   return null;
 }
 
-function clampToBounds(agent, halfSize) {
+function clampToBounds(agent, halfSize, groundY) {
   const margin = halfSize - 0.5;
   agent.position.x = Math.max(-margin, Math.min(margin, agent.position.x));
   agent.position.z = Math.max(-margin, Math.min(margin, agent.position.z));
-  agent.position.y = 0;
+  agent.position.y = groundY;
 }

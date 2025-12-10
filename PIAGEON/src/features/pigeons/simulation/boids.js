@@ -2,12 +2,13 @@ import * as THREE from "three";
 import { getBoidParamsForCluster } from "./brain.js";
 import { IDX_MAX_FORCE, IDX_MAX_SPEED, IDX_PERCEPTION, IDX_W_ALI, IDX_W_COH, IDX_W_SEP } from "./genetics.js";
 
-const WORLD_HALF_SIZE = 150; // moitié de la taille du monde pour le confinement des pigeons
+const WORLD_HALF_SIZE = 40; // moitié de la taille du monde pour le confinement des pigeons
+const GROUND_Y = 18;
 
 const tmpVec = new THREE.Vector3();
 const tmpVec2 = new THREE.Vector3();
 
-export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wanderStrength = 0.4 } = {} ) {
+export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wanderStrength = 0.4, groundY = GROUND_Y } = {} ) {
   for (let i = 0; i < agents.length; i++) {
     const p = agents[i]; // 
     const params = getBoidParamsForCluster(p.clusterId);
@@ -25,7 +26,7 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
     limitVector(p.velocity, params.maxSpeed);
 
     p.position.addScaledVector(p.velocity, dt);
-    p.position.y = 0;
+    p.position.y = groundY;
     p.acceleration.set(0, 0, 0);
   }
 }
