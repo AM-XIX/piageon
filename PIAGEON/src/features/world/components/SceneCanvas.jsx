@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { CameraRig } from "./CameraRig.jsx";
-import Ground from "./Ground.jsx";
+import { Vegetation } from "./Vegetation";
+import { Ground } from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
 import { PigeonFlock } from "../../pigeons/components/PigeonFlock.jsx";
 
@@ -30,22 +31,16 @@ export function SceneCanvas() {
 
       <CameraRig />
 
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.65} />
       <directionalLight
         position={[20, 30, 10]}
         intensity={1.3}
         castShadow
       />
 
+      <Vegetation />
       <Ground />
-
-      <PigeonFlock
-        initialCount={100}
-        interactionRadius={3}
-        worldHalfSize={40}
-        timeScale={timeScale}
-        groundY={18}
-      />
+      <PigeonAutomaton />
       
     </Canvas>
   );
