@@ -11,14 +11,26 @@ const tmpVec2 = new THREE.Vector3();
 export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wanderStrength = 0.4, groundY = GROUND_Y } = {} ) {
   for (let i = 0; i < agents.length; i++) {
     const p = agents[i]; // 
+    const motion = updateLocomotionState(p, dt);
     const params = getBoidParamsForCluster(p.clusterId);
+
+    // idle : reste sur place avec légère dérive
+    if (motion.mode === "idle") {
+      p.velocity.multiplyScalar(0.9);
+      limitVector(p.velocity, params.maxSpeed * 0.2);
+      p.position.addScaledVector(p.velocity, dt);
+      p.position.y = groundY;
+      p.acceleration.set(0, 0, 0);
+      continue;
+    }
 
     const steering = computeBoidSteering(
       p,
       agents,
       params,
       worldHalfSize,
-      wanderStrength
+      wanderStrength,
+      motion
     );
     p.acceleration.add(steering);
     const frameEnergy = steering.lengthSq() * dt;
@@ -27,7 +39,11 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
     }
 
     p.velocity.addScaledVector(p.acceleration, dt);
-    limitVector(p.velocity, params.maxSpeed);
+    const speedCap =
+      motion.mode === "turn"
+        ? params.maxSpeed * 0.35
+        : params.maxSpeed * 0.65;
+    limitVector(p.velocity, speedCap);
 
     p.position.addScaledVector(p.velocity, dt);
     p.position.y = groundY;
@@ -35,8 +51,8 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
   }
 }
 
-function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength) {
-  const perception = p.genome[IDX_PERCEPTION] ?? 3;
+function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, motion) {
+  const perception = Math.min(p.genome[IDX_PERCEPTION] ?? 1.2, 1.5); // limite la portée de détection
   const maxForce = p.genome[IDX_MAX_FORCE] ?? 0.05;
   const maxSpeed = Math.min(params.maxSpeed, p.genome[IDX_MAX_SPEED] ?? params.maxSpeed);
 
@@ -107,6 +123,13 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength) {
   const wander = randomFlatVector().setLength(maxForce * wanderStrength);
   steering.add(wander);
 
+  // légère envie de tourner quand mode "turn"
+  if (motion.mode === "turn" && motion.heading) {
+    const desired = motion.heading.clone().setLength(maxSpeed * 0.4);
+    steerToward(desired, p.velocity, maxSpeed, maxForce);
+    steering.add(desired.multiplyScalar(0.5));
+  }
+
   limitVector(steering, maxForce * 3);
   steering.y = 0;
   return steering;
@@ -122,17 +145,19 @@ function steerToward(desired, currentVelocity, maxSpeed, maxForce) {
 
 function steerToBounds(agent, maxSpeed, maxForce, halfSize) {
   const desired = new THREE.Vector3();
-  const margin = halfSize - 2;
+  const margin = halfSize - 1.5; // léger amorti
+  const dist = Math.hypot(agent.position.x, agent.position.z);
 
-  if (agent.position.x > margin) desired.x = -maxSpeed;
-  else if (agent.position.x < -margin) desired.x = maxSpeed;
-
-  if (agent.position.z > margin) desired.z = -maxSpeed;
-  else if (agent.position.z < -margin) desired.z = maxSpeed;
+  if (dist > margin) {
+    desired.set(-agent.position.x, 0, -agent.position.z).setLength(maxSpeed);
+  } else if (dist > margin * 0.9) {
+    // commence à recentrer avant la bordure
+    const factor = (dist - margin * 0.9) / (margin * 0.1);
+    desired.set(-agent.position.x, 0, -agent.position.z).setLength(maxSpeed * factor);
+  }
 
   if (desired.lengthSq() === 0) return desired;
 
-  desired.y = 0;
   return steerToward(desired, agent.velocity, maxSpeed, maxForce);
 }
 
@@ -140,6 +165,37 @@ function randomFlatVector() {
   const v = new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5);
   if (v.lengthSq() === 0) v.set(1, 0, 0);
   return v.normalize();
+}
+
+function randomRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function updateLocomotionState(agent, dt) {
+  if (!agent.motion) {
+    agent.motion = {
+      mode: "idle",
+      timer: randomRange(0.4, 1.0),
+      heading: randomFlatVector(),
+    };
+  }
+
+  agent.motion.timer -= dt;
+  if (agent.motion.timer <= 0) {
+    if (agent.motion.mode === "idle") {
+      agent.motion.mode = Math.random() < 0.7 ? "walk" : "turn";
+      agent.motion.timer = randomRange(1.0, 2.2);
+    } else if (agent.motion.mode === "walk") {
+      agent.motion.mode = Math.random() < 0.5 ? "idle" : "turn";
+      agent.motion.timer = randomRange(0.5, 1.3);
+    } else if (agent.motion.mode === "turn") {
+      agent.motion.mode = Math.random() < 0.6 ? "walk" : "idle";
+      agent.motion.timer = randomRange(0.7, 1.6);
+    }
+    agent.motion.heading = randomFlatVector();
+  }
+
+  return agent.motion;
 }
 
 function planarDistance(a, b) {

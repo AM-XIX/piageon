@@ -2,7 +2,7 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { usePigeonModel } from "../model/usePigeonModel.js";
-import { randomizeGrid, stepGrid } from "../simulation/cellularPigeons.js";
+import { initCells, stepCells } from "../simulation/cells.js";
 
 const N = 40;
 const CELL_SIZE = 0.7;
@@ -12,8 +12,7 @@ export function PigeonAutomaton() {
   const { geometry, material } = usePigeonModel();
   const instancedRef = useRef();
 
-  const currGridRef = useRef(randomizeGrid(N, 0.25));
-  const nextGridRef = useRef(new Uint8Array(currGridRef.current.length));
+  const currGridRef = useRef(initCells(N, 0.25));
 
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const timeRef = useRef(0);
@@ -26,25 +25,22 @@ export function PigeonAutomaton() {
     timeRef.current = 0;
 
     const curr = currGridRef.current;
-    const next = nextGridRef.current;
-
-    stepGrid(curr, next, N);
+    const next = stepCells(curr);
 
     const half = (N * CELL_SIZE) / 2;
     let instanceIndex = 0;
 
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
-        const i = y * N + x;
-        if (next[i] === 1) {
+        if (next[y][x] === 1) {
           const worldX = x * CELL_SIZE - half;
           const worldZ = y * CELL_SIZE - half;
           const worldY = 0.35;
 
           dummy.position.set(worldX, worldY, worldZ);
-          const s = 0.06; 
-          dummy.scale.set(s, s, s); 
-          
+          const s = 0.06;
+          dummy.scale.set(s, s, s);
+
           dummy.updateMatrix();
           instancedRef.current.setMatrixAt(instanceIndex, dummy.matrix);
           instanceIndex++;
@@ -56,7 +52,6 @@ export function PigeonAutomaton() {
     instancedRef.current.instanceMatrix.needsUpdate = true;
 
     currGridRef.current = next;
-    nextGridRef.current = curr;
   });
 
   const maxInstances = N * N;

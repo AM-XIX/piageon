@@ -8,7 +8,7 @@ export function createPigeonAgent({ id, position, party = randomParty(), genome 
     Math.random() - 0.5
   );
   if (velocity.lengthSq() === 0) velocity.set(1, 0, 0);
-  velocity.setLength(0.5 + Math.random() * 0.5);
+  velocity.setLength(0.3 + Math.random() * 0.3);
 
   return {
     id,
@@ -40,7 +40,7 @@ export function createPigeonAgent({ id, position, party = randomParty(), genome 
   };
 }
 
-export function createRandomPigeon({ id, worldHalfSize, groundY = 18 }) {
+export function createRandomPigeon({ id, worldHalfSize, groundY = 18, party }) {
   const radius = worldHalfSize - 1;
   const r = Math.sqrt(Math.random()) * radius;
   const theta = Math.random() * Math.PI * 2;
@@ -49,7 +49,7 @@ export function createRandomPigeon({ id, worldHalfSize, groundY = 18 }) {
     groundY,
     Math.sin(theta) * r
   );
-  return createPigeonAgent({ id, position, groundY });
+  return createPigeonAgent({ id, position, groundY, party: party ?? randomParty() });
 }
 
 export function createNeutralPigeon({ id, position, groundY = 18 }) {

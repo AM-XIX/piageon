@@ -29,11 +29,11 @@ export function getClusterForAgent(agent, neighbors) {
 export function getBoidParamsForCluster(clusterId) {
   switch (clusterId) {
     case 0: // ally-heavy: tight cohesion
-      return { maxSpeed: 1.6, wSep: 1.0, wAli: 1.2, wCoh: 1.8, allyPull: 2.4 };
+      return { maxSpeed: 1.4, wSep: 1.0, wAli: 1.1, wCoh: 1.2, allyPull: 1.1 };
     case 1: // mixed: balanced
-      return { maxSpeed: 2.0, wSep: 1.3, wAli: 1.0, wCoh: 1.1, allyPull: 1.4 };
+      return { maxSpeed: 1.6, wSep: 1.3, wAli: 1.0, wCoh: 0.9, allyPull: 0.9 };
     case 2: // hostile/isolated: faster, avoid others
-      return { maxSpeed: 2.6, wSep: 1.8, wAli: 0.9, wCoh: 0.6, allyPull: 0.6 };
+      return { maxSpeed: 2.0, wSep: 1.8, wAli: 0.9, wCoh: 0.6, allyPull: 0.4 };
     default:
       return { maxSpeed: 2.0, wSep: 1.3, wAli: 1.0, wCoh: 1.0, allyPull: 1.0 };
   }

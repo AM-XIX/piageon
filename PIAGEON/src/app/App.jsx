@@ -1,4 +1,6 @@
 import { SceneCanvas } from "../features/world/components/SceneCanvas";
+import { PigeonHud } from "../features/pigeons/components/PigeonHud.jsx";
+import { PigeonCard } from "../features/pigeons/components/PigeonCard.jsx";
 
 export default function App() {
   return (
@@ -9,6 +11,8 @@ export default function App() {
 
       <main className="scene-wrapper">
         <SceneCanvas />
+        <PigeonHud />
+        <PigeonCard />
       </main>
 
       <footer className="ui-footer">

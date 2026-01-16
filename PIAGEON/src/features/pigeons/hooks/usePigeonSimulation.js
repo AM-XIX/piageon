@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { updateBoids } from "../simulation/boids.js";
 import { getClusterForAgent } from "../simulation/brain.js";
 import { createNeutralPigeon, createPigeonAgent, createRandomPigeon } from "../simulation/pigeonAgent.js";
-import { computeLeaderNeighborhood, createChildGenome, evaluateFitness, randomParty, resolveInteractions, updateLeaderStates } from "../simulation/genetics.js";
+import { PARTIES, computeLeaderNeighborhood, createChildGenome, evaluateFitness, randomParty, resolveInteractions, updateLeaderStates } from "../simulation/genetics.js";
 
 export function usePigeonSimulation({
   initialCount = 100,
@@ -19,8 +19,13 @@ export function usePigeonSimulation({
   useEffect(() => {
     if (agentsRef.current.length === 0) {
       const agents = [];
+      const partyCycle = shuffleParties();
       for (let i = 0; i < initialCount; i++) {
-        agents.push(createRandomPigeon({ id: i, worldHalfSize, groundY }));
+        const party = partyCycle[i % partyCycle.length];
+        agents.push(createRandomPigeon({ id: i, worldHalfSize, groundY, party }));
+        if (i % partyCycle.length === partyCycle.length - 1) {
+          partyCycle.push(...shuffleParties()); // extend cycle to keep mix
+        }
       }
       agentsRef.current = agents;
       nextIdRef.current = initialCount;
@@ -54,7 +59,7 @@ export function usePigeonSimulation({
     // boids
     updateBoids(agents, scaledDt, {
       worldHalfSize,
-      wanderStrength: 0.6,
+      wanderStrength: 0.35,
       groundY,
     });
 
@@ -142,4 +147,13 @@ function pickParentsByFitness(agents, count = 2) {
     parents.push(pickOne());
   }
   return parents;
+}
+
+function shuffleParties() {
+  const arr = Object.values(PARTIES);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }

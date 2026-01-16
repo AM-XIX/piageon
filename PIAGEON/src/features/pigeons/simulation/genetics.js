@@ -19,8 +19,8 @@ export const LEADER_TYPES = {
 
 const LEADER_RADIUS = 5;
 const KING_EXCLUSION_RADIUS = 8;
-const AGE_THRESHOLD = 60; // maturité par défaut pour certains leaders
-const ANCIENT_AGE = 120; // très vieux pour l'Ancien
+const AGE_THRESHOLD = 80; // maturité par défaut pour certains leaders (plus tardif)
+const ANCIENT_AGE = 140; // très vieux pour l'Ancien
 
 // parties politiques
 export const PARTIES = {
@@ -50,8 +50,8 @@ export function randomParty() {
 }
 
 // bornes des gènes
-const MIN_GENES = [0.5, 0.2, 0.2, 1.5, 1.0, 0.01];
-const MAX_GENES = [3.0, 2.0, 2.0, 5.0, 3.0, 0.1];
+const MIN_GENES = [0.4, 0.15, 0.15, 0.6, 0.6, 0.01];
+const MAX_GENES = [2.0, 1.6, 1.6, 1.6, 1.4, 0.08];
 
 // création d'un génome aléatoire
 export function createRandomGenome() {
@@ -217,8 +217,8 @@ export function updateLeaderStates(agents, { neighborInfo, dt = 0.016 } = {}) {
             neighbor.frameEffects.killAura += 0.2;
           }
           break;
-        case LEADER_TYPES.PROPHET: // boost les anarchistes
-          neighbor.frameEffects.conversionBoost += 0.15;
+        case LEADER_TYPES.PROPHET: // boost les anarchistes (réduit pour éviter dominance)
+          neighbor.frameEffects.conversionBoost += 0.08;
           break;
         case LEADER_TYPES.ELDER: // boost tout le monde
           neighbor.frameEffects.killShield += 0.3;
@@ -238,6 +238,7 @@ function evaluateLeaderPromotion(agent, local, agents) {
   const conversions = stats.conversionsDone ?? 0;
   const kills = stats.kills ?? 0;
   const age = agent.age ?? 0;
+  const timeAlive = stats.timeAlive ?? age;
   const followers = local.followersNearby ?? 0;
   if (local.leadersNearby && local.leadersNearby.length > 0) {
     return false; // évite plusieurs leaders dans le même groupe proche
@@ -246,32 +247,32 @@ function evaluateLeaderPromotion(agent, local, agents) {
   // conditions spécifiques par partie
   switch (agent.party) {
     case PARTIES.COMMUNIST: // commissaire
-      if (conversions >= 10 && followers >= 4 && kills <= 2) {
+      if (conversions >= 15 && followers >= 6 && kills <= 1 && timeAlive >= 50) {
         return applyLeaderBuff(agent, LEADER_TYPES.COMMISSAR);
       }
       break;
     case PARTIES.DEMOCRAT: // président
-      if (age >= AGE_THRESHOLD && followers >= 3 && kills === 0) {
+      if (age >= AGE_THRESHOLD + 20 && followers >= 5 && kills === 0 && conversions >= 4) {
         return applyLeaderBuff(agent, LEADER_TYPES.PRESIDENT);
       }
       break;
     case PARTIES.MONARCHIST: // roi
-      if (followers >= 6 && age >= AGE_THRESHOLD && !kingNearby(agent, agents)) {
+      if (followers >= 8 && age >= AGE_THRESHOLD + 10 && conversions >= 3 && !kingNearby(agent, agents)) {
         return applyLeaderBuff(agent, LEADER_TYPES.KING);
       }
       break;
     case PARTIES.FASCIST: // dictateur
-      if (kills >= 8 && followers >= 3) {
+      if (kills >= 12 && followers >= 5 && conversions >= 2) {
         return applyLeaderBuff(agent, LEADER_TYPES.DICTATOR);
       }
       break;
     case PARTIES.ANARCHIST: // prophète
-      if (age >= AGE_THRESHOLD / 2 && conversions >= 5 && kills >= 3) {
+      if (age >= AGE_THRESHOLD && conversions >= 10 && kills >= 5 && timeAlive >= 70) {
         return applyLeaderBuff(agent, LEADER_TYPES.PROPHET);
       }
       break;
     case PARTIES.NEUTRAL: // ancien
-      if (age >= ANCIENT_AGE && kills === 0 && conversions === 0) {
+      if (age >= ANCIENT_AGE && kills === 0 && conversions === 0 && followers >= 4) {
         return applyLeaderBuff(agent, LEADER_TYPES.ELDER);
       }
       break;
@@ -326,7 +327,7 @@ function applyLeaderBuff(agent, leaderType) {
     boosted[IDX_W_SEP] = clampGene(boosted[IDX_W_SEP] * 1.2, IDX_W_SEP); // plus de séparation
     effects.killAura = 0.2; // aura de kill pour les alliés
   } else if (leaderType === LEADER_TYPES.PROPHET) { // boost les anarchistes
-    effects.conversionAura = 0.3; // forte aura de conversion pour les alliés
+    effects.conversionAura = 0.15; // aura réduite pour limiter la dominance
   } else if (leaderType === LEADER_TYPES.ELDER) { // boost les neutres
     boosted[IDX_PERCEPTION] = clampGene(boosted[IDX_PERCEPTION] * 1.8, IDX_PERCEPTION); // bien meilleure perception
     effects.killShield = 0.5; // fort bouclier anti-kill
@@ -358,7 +359,7 @@ function applyProphetOscillation(agent, dt) {
 export function resolveInteractions(
   agents,
   {
-    interactionRadius = 3,
+    interactionRadius = 1.1,
     worldHalfSize = 50,
     onAgentKilled,
     groundY = 0,
@@ -464,9 +465,11 @@ function applyAction(action, actor, target, kills, conversions, actorCounts) {
     if (target.stats) target.stats.damageTaken = (target.stats.damageTaken ?? 0) + 1;
   } else if (action.type === "convert") {
     if (target.isLeader) return; // les leaders ne se convertissent pas
+    const baseBlock = 0.15; // chance passive d'ignorer une conversion
     const resist =
       Math.max(
         0,
+        baseBlock +
         (target.leaderEffects?.conversionResistance ?? 0) +
         (target.frameEffects?.conversionResistance ?? 0) -
         (actor.frameEffects?.conversionBoost ?? 0)
@@ -563,7 +566,7 @@ function decideInteraction(actor, target, actorCounts, targetCounts) {
       if (target.party === PARTIES.NEUTRAL) {
         return { type: "convert", party: PARTIES.ANARCHIST };
       }
-      if (Math.random() < 0.5) {
+      if (Math.random() < 0.35) {
         return { type: "convert", party: PARTIES.ANARCHIST };
       }
       return { type: "selfKill" };

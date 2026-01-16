@@ -3,9 +3,14 @@ import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { PARTY_COLORS } from "../simulation/genetics.js";
+import { selectAgent } from "../state/selectionStore.js";
 
 export function PigeonInstance({ agent, baseScene }) {
-  const model = useMemo(() => baseScene.clone(), [baseScene]);
+  const model = useMemo(() => {
+    const clone = baseScene.clone();
+    clone.scale.setScalar(0.18); // pigeons plus petits
+    return clone;
+  }, [baseScene]);
   const bounds = useMemo(() => {
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
@@ -51,8 +56,12 @@ export function PigeonInstance({ agent, baseScene }) {
     ? agent.leaderType.charAt(0).toUpperCase() + agent.leaderType.slice(1)
     : "Leader";
 
+  const handleClick = () => {
+    selectAgent(agent);
+  };
+
   return (
-    <group ref={ref}>
+    <group ref={ref} onClick={handleClick}>
       <primitive object={model} />
       {agent.isLeader && (
         <Text

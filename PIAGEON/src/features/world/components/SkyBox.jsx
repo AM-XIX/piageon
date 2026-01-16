@@ -12,7 +12,7 @@ export function SkyBox() {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     texture.magFilter = THREE.LinearFilter;
     texture.minFilter = THREE.LinearMipMapLinearFilter;
-    texture.encoding = THREE.sRGBEncoding;
+    texture.colorSpace = THREE.SRGBColorSpace;
 
     scene.background = texture;
     scene.environment = texture;
