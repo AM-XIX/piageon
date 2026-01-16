@@ -1,5 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { CameraRig } from "./CameraRig.jsx";
+import { Vegetation } from "./Vegetation";
 import { Ground } from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
 import { PigeonAutomaton } from "../../pigeons/components/PigeonAutomaton.jsx";
@@ -19,8 +20,8 @@ export function SceneCanvas() {
         castShadow
       />
 
+      <Vegetation />
       <Ground />
-
       <PigeonAutomaton />
       
     </Canvas>
