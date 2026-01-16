@@ -20,6 +20,7 @@ export function createPigeonAgent({ id, position, party = randomParty(), genome 
 
     // partie génétique / politique
     genome,
+    baseGenome: new Float32Array(genome),
     party,
 
     // partie cerveau / clustering
@@ -28,6 +29,14 @@ export function createPigeonAgent({ id, position, party = randomParty(), genome 
     // meta
     state: "alive", // | "dying" | "born"
     age: 0,
+    stats: {
+      timeAlive: 0,
+      foodEaten: 0,
+      damageTaken: 0,
+      conversionsDone: 0,
+      kills: 0,
+      energySpent: 0,
+    },
   };
 }
 

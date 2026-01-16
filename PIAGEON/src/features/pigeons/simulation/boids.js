@@ -21,6 +21,10 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
       wanderStrength
     );
     p.acceleration.add(steering);
+    const frameEnergy = steering.lengthSq() * dt;
+    if (p.stats) {
+      p.stats.energySpent = (p.stats.energySpent ?? 0) + frameEnergy;
+    }
 
     p.velocity.addScaledVector(p.acceleration, dt);
     limitVector(p.velocity, params.maxSpeed);

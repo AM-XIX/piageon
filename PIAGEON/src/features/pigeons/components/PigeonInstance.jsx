@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { PARTY_COLORS } from "../simulation/genetics.js";
 
 export function PigeonInstance({ agent, baseScene }) {
   const model = useMemo(() => baseScene.clone(), [baseScene]);
-  const footOffset = useMemo(() => {
+  const bounds = useMemo(() => {
     const box = new THREE.Box3().setFromObject(model);
-    return -box.min.y; // lift so feet sit on ground
+    const size = box.getSize(new THREE.Vector3());
+    return { box, size };
   }, [model]);
+  const footOffset = useMemo(() => -bounds.box.min.y, [bounds]);
   const ref = useRef();
 
-  // recolor meshes based on party
+  // permet de recolorer le pigeon selon sa faction
   useEffect(() => {
     const fallback = PARTY_COLORS.neutral || "#cccccc";
     model.traverse((node) => {
@@ -44,5 +47,26 @@ export function PigeonInstance({ agent, baseScene }) {
     ref.current.position.y = agent.position.y + footOffset;
   });
 
-  return <primitive ref={ref} object={model} />;
+  const leaderLabel = agent.leaderType
+    ? agent.leaderType.charAt(0).toUpperCase() + agent.leaderType.slice(1)
+    : "Leader";
+
+  return (
+    <group ref={ref}>
+      <primitive object={model} />
+      {agent.isLeader && (
+        <Text
+          position={[0, bounds.box.max.y + bounds.size.y * 0.2, 0]}
+          fontSize={bounds.size.y * 0.12}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="bottom"
+          outlineWidth={bounds.size.y * 0.01}
+          outlineColor="#000000"
+        >
+          {leaderLabel}
+        </Text>
+      )}
+    </group>
+  );
 }
