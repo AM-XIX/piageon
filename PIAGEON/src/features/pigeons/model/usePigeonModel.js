@@ -1,27 +1,60 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
+import * as THREE from "three";
+import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 export function usePigeonModel() {
-  const gltf = useGLTF("../../../public/pigeon.glb");
+  const { scene } = useGLTF("/pigeon.glb");
 
-  const mesh = useMemo(() => {
-    let found = null;
-    gltf.scene.traverse((child) => {
-      if (!found && child.isMesh) {
-        found = child;
+  const meshData = useMemo(() => {
+    const geometries = [];
+    let mainMaterial = null;
+
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        const g = child.geometry.clone();
+        
+        child.updateMatrixWorld();
+        g.applyMatrix4(child.matrixWorld);
+        
+        geometries.push(g);
+        
+        if (child.material && child.material.map && !mainMaterial) {
+          mainMaterial = child.material.clone();
+        }
       }
     });
-    return found;
-  }, [gltf]);
 
-  if (!mesh) {
+    if (!mainMaterial) {
+      scene.traverse((child) => {
+        if (child.isMesh && !mainMaterial) mainMaterial = child.material.clone();
+      });
+    }
+
+    if (geometries.length > 0) {
+      let mergedGeometry = BufferGeometryUtils.mergeGeometries(geometries);
+ 
+      mergedGeometry.deleteAttribute('skinIndex');
+      mergedGeometry.deleteAttribute('skinWeight');
+      
+      mergedGeometry.center(); 
+
+      if (mainMaterial) {
+        mainMaterial.roughness = 0.8; 
+        mainMaterial.metalness = 0.1; 
+        mainMaterial.emissive = new THREE.Color(0x000000); 
+      }
+
+      return { 
+        geometry: mergedGeometry, 
+        material: mainMaterial 
+      };
+    }
+
     return { geometry: null, material: null };
-  }
+  }, [scene]);
 
-  return {
-    geometry: mesh.geometry,
-    material: mesh.material,
-  };
+  return meshData;
 }
 
-useGLTF.preload("/models/pigeon.glb");
+useGLTF.preload("/pigeon.glb");

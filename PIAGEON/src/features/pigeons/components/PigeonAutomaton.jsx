@@ -1,4 +1,3 @@
-// src/features/pigeons/components/PigeonAutomaton.jsx
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -13,10 +12,6 @@ export function PigeonAutomaton() {
   const { geometry, material } = usePigeonModel();
   const instancedRef = useRef();
 
-  if (!geometry || !material) {
-    return null;
-  }
-
   const currGridRef = useRef(randomizeGrid(N, 0.25));
   const nextGridRef = useRef(new Uint8Array(currGridRef.current.length));
 
@@ -24,7 +19,7 @@ export function PigeonAutomaton() {
   const timeRef = useRef(0);
 
   useFrame((_, delta) => {
-    if (!instancedRef.current) return;
+    if (!instancedRef.current || !geometry) return;
 
     timeRef.current += delta;
     if (timeRef.current < TICK_INTERVAL) return;
@@ -44,13 +39,13 @@ export function PigeonAutomaton() {
         if (next[i] === 1) {
           const worldX = x * CELL_SIZE - half;
           const worldZ = y * CELL_SIZE - half;
-          const worldY = 0;
+          const worldY = 0.35;
 
           dummy.position.set(worldX, worldY, worldZ);
-          dummy.rotation.y = 0;
-          dummy.scale.set(0.4, 0.4, 0.4);
+          const s = 0.06; 
+          dummy.scale.set(s, s, s); 
+          
           dummy.updateMatrix();
-
           instancedRef.current.setMatrixAt(instanceIndex, dummy.matrix);
           instanceIndex++;
         }
@@ -60,12 +55,13 @@ export function PigeonAutomaton() {
     instancedRef.current.count = instanceIndex;
     instancedRef.current.instanceMatrix.needsUpdate = true;
 
-    // swap
     currGridRef.current = next;
     nextGridRef.current = curr;
   });
 
   const maxInstances = N * N;
+
+  if (!geometry || !material) return null;
 
   return (
     <instancedMesh

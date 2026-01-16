@@ -13,7 +13,7 @@ export function SceneCanvas() {
 
       <CameraRig />
 
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.65} />
       <directionalLight
         position={[20, 30, 10]}
         intensity={1.3}

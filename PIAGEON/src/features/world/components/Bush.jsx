@@ -10,7 +10,7 @@ const Branch = ({ start, end, radius }) => {
   return (
     <mesh position={midpoint} onUpdate={(self) => self.lookAt(end)}>
       <cylinderGeometry args={[radius * 1.1, radius, height, 6]} />
-      <meshStandardMaterial color="#2d1b0d" />
+      <meshStandardMaterial color="#472912" />
     </mesh>
   );
 };
