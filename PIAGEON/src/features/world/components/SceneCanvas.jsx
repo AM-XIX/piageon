@@ -5,6 +5,8 @@ import { Vegetation } from "./Vegetation";
 import { Ground } from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
 import { PigeonFlock } from "../../pigeons/components/PigeonFlock.jsx";
+import { PigeonAutomaton } from "../../pigeons/components/PigeonAutomaton.jsx";
+import { SimulationProvider } from "../../../shared/SimulationContext.jsx";
 
 export function SceneCanvas() {
   const [timeScale, setTimeScale] = useState(1);
@@ -25,6 +27,7 @@ export function SceneCanvas() {
   }, []);
 
   return (
+    <SimulationProvider>
     <Canvas camera={{ position: [15, 18, 20], fov: 45 }} dpr={[1, 2]} >
 
       <SkyBox />
@@ -43,5 +46,6 @@ export function SceneCanvas() {
       <PigeonFlock timeScale={timeScale} groundY={0} worldHalfSize={16} interactionRadius={1.1} />
       
     </Canvas>
+    </SimulationProvider>
   );
 }
