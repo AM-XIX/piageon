@@ -24,7 +24,7 @@ export function usePigeonSimulation({
         const party = partyCycle[i % partyCycle.length];
         agents.push(createRandomPigeon({ id: i, worldHalfSize, groundY, party }));
         if (i % partyCycle.length === partyCycle.length - 1) {
-          partyCycle.push(...shuffleParties()); // extend cycle to keep mix
+          partyCycle.push(...shuffleParties());
         }
       }
       agentsRef.current = agents;
@@ -36,11 +36,12 @@ export function usePigeonSimulation({
   useFrame((_, dt) => {
     const scaledDt = dt * timeScale;
     const agents = agentsRef.current;
-    const respawnAgent = (deadAgent) => {
+    
+    const respawnAgent = (position) => {
       const radius = worldHalfSize - 1;
       const r = Math.sqrt(Math.random()) * radius;
       const theta = Math.random() * Math.PI * 2;
-      const spawnPos = deadAgent.position.clone();
+      const spawnPos = position.clone();
       spawnPos.set(Math.cos(theta) * r, groundY, Math.sin(theta) * r);
       const child = createChildFromPool({
         agents,
@@ -51,29 +52,45 @@ export function usePigeonSimulation({
       agents.push(child);
     };
 
+    // Gestion de la mort et du respawn avec délai
+    for (let i = agents.length - 1; i >= 0; i--) {
+      const a = agents[i];
+      if (a.state === "dying") {
+        a.deathTimer = (a.deathTimer || 0) + dt;
+        if (a.deathTimer > 3.0) {
+          agents.splice(i, 1);
+          respawnAgent(a.position);
+          forceUpdate((v) => v + 1);
+        }
+      }
+    }
+
+    const livingAgents = agents.filter(a => a.state !== "dying");
+
     // cerveau / clustering
-    for (const a of agents) {
-      a.clusterId = getClusterForAgent(a, agents);
+    for (const a of livingAgents) {
+      a.clusterId = getClusterForAgent(a, livingAgents);
     }
 
     // boids
-    updateBoids(agents, scaledDt, {
+    updateBoids(livingAgents, scaledDt, {
       worldHalfSize,
       wanderStrength: 0.35,
       groundY,
     });
 
     // leaders : mutation et effets locaux
-    const neighborInfo = computeLeaderNeighborhood(agents);
-    const leadersChanged = updateLeaderStates(agents, {
+    const neighborInfo = computeLeaderNeighborhood(livingAgents);
+    const leadersChanged = updateLeaderStates(livingAgents, {
       neighborInfo,
       dt: scaledDt,
     });
-    for (let i = agents.length - 1; i >= 0; i--) {
-      const a = agents[i];
+    
+    for (const a of livingAgents) {
       if (a.leaderEffects?.forceSelfKill) {
-        agents.splice(i, 1);
-        respawnAgent(a);
+        a.state = "dying";
+        a.triggerDeath = true;
+        a.deathTimer = 0;
       }
     }
 
@@ -81,16 +98,14 @@ export function usePigeonSimulation({
       interactionRadius,
       worldHalfSize,
       groundY,
-      onAgentKilled: (deadAgent) => {
-        respawnAgent(deadAgent);
-      },
     });
+    
     if (changed || leadersChanged) {
       forceUpdate((v) => v + 1);
     }
 
     // contraintes simples
-    for (const a of agents) {
+    for (const a of livingAgents) {
       a.age = (a.age ?? 0) + scaledDt;
       if (a.stats) a.stats.timeAlive = a.age;
     }
@@ -125,9 +140,10 @@ function createChildFromPool({ agents, id, position, groundY }) {
 }
 
 function pickParentsByFitness(agents, count = 2) {
-  if (agents.length === 0) return [];
+  const candidates = agents.filter(a => a.state !== "dying");
+  if (candidates.length === 0) return [];
 
-  const scored = agents.map((agent) => {
+  const scored = candidates.map((agent) => {
     const fitness = Math.max(0.001, evaluateFitness(agent));
     return { agent, fitness };
   });

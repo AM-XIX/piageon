@@ -344,7 +344,7 @@ function applyProphetOscillation(agent, dt) {
   const base = agent.baseGenome || agent.genome;
   const oscillated = new Float32Array(base);
   for (let i = 0; i < GENE_COUNT; i++) {
-    const jitter = 1 + (Math.random() * 2 - 1) * 0.2; // +/-20%
+    const jitter = 1 + (Math.random() * 2 - 1) * 0.2;
     oscillated[i] = clampGene(oscillated[i] * jitter, i);
   }
   agent.genome = oscillated;
@@ -371,13 +371,20 @@ export function resolveInteractions(
   const neighborList = Array.from({ length: agents.length }, () => []);
   const counts = Array.from({ length: agents.length }, () => ({}));
 
+  // Indexation
   for (let i = 0; i < agents.length; i++) {
+    // Ignore les morts pour les calculs de voisinage
+    if (agents[i].state === "dying") continue; 
     const party = agents[i].party;
     counts[i][party] = (counts[i][party] || 0) + 1;
   }
 
+  // Voisinage
   for (let i = 0; i < agents.length; i++) {
+    if (agents[i].state === "dying") continue;
     for (let j = i + 1; j < agents.length; j++) {
+      if (agents[j].state === "dying") continue;
+
       const a = agents[i];
       const b = agents[j];
       const dx = a.position.x - b.position.x;
@@ -396,12 +403,13 @@ export function resolveInteractions(
   const conversions = new Map();
   let changed = false;
 
+  // Décision
   for (let i = 0; i < agents.length; i++) {
+    if (agents[i].state === "dying") continue;
     const actor = agents[i];
     const actorCounts = counts[i];
 
     for (const j of neighborList[i]) {
-      if (j <= i) continue;
       const target = agents[j];
       const targetCounts = counts[j];
 
@@ -413,31 +421,35 @@ export function resolveInteractions(
     }
   }
 
+  // Application des morts
   if (kills.size > 0) {
-    for (let i = agents.length - 1; i >= 0; i--) {
-      const dying = agents[i];
-      if (kills.has(dying.id)) {
-        agents.splice(i, 1);
-        if (onAgentKilled) {
-          onAgentKilled(dying);
-        }
+    for (const id of kills) {
+      const agent = agents.find(a => a.id === id);
+      if (agent && agent.state !== "dying") {
+        agent.state = "dying";
+        agent.triggerDeath = true;
+        agent.deathTimer = 0;
         changed = true;
       }
     }
   }
 
+  // Application des conversions
   if (conversions.size > 0) {
-    for (const agent of agents) {
-      const nextParty = conversions.get(agent.id);
-      if (nextParty && !kills.has(agent.id) && agent.party !== nextParty) {
-        agent.party = nextParty;
+    for (const [id, newParty] of conversions) {
+      const agent = agents.find(a => a.id === id);
+      if (agent && agent.state !== "dying" && agent.party !== newParty) {
+        agent.party = newParty;
+        agent.triggerConvert = true;
         changed = true;
       }
     }
   }
 
   for (const agent of agents) {
-    clampToBounds(agent, worldHalfSize, groundY);
+    if (agent.state !== "dying") {
+      clampToBounds(agent, worldHalfSize, groundY);
+    }
   }
 
   return changed;
@@ -445,46 +457,36 @@ export function resolveInteractions(
 
 function applyAction(action, actor, target, kills, conversions, actorCounts) {
   if (!action) return;
+
   if (action.type === "kill") {
     if (target.isLeader) {
       const attackers = actorCounts?.[actor.party] ?? 1;
-      if (attackers < 3) return; // leader tombe seulement sous attaque groupée
-      kills.add(target.id); // pas de bouclier pour leaders une fois encerclés
+      if (attackers < 3) return;
+      kills.add(target.id);
       actor.triggerAttack = true;
     } else {
-      const shield =
-        Math.max(
-          0,
-          (target.leaderEffects?.killShield ?? 0) +
-          (target.frameEffects?.killShield ?? 0) -
-          (actor.frameEffects?.killAura ?? 0)
-        );
+      const shield = Math.max(0, (target.leaderEffects?.killShield ?? 0) + (target.frameEffects?.killShield ?? 0) - (actor.frameEffects?.killAura ?? 0));
       if (Math.random() < shield) return;
       kills.add(target.id);
       actor.triggerAttack = true;
     }
     if (actor.stats) actor.stats.kills = (actor.stats.kills ?? 0) + 1;
     if (target.stats) target.stats.damageTaken = (target.stats.damageTaken ?? 0) + 1;
+
   } else if (action.type === "convert") {
-    if (target.isLeader) return; // les leaders ne se convertissent pas
-    const baseBlock = 0.15; // chance passive d'ignorer une conversion
-    const resist =
-      Math.max(
-        0,
-        baseBlock +
-        (target.leaderEffects?.conversionResistance ?? 0) +
-        (target.frameEffects?.conversionResistance ?? 0) -
-        (actor.frameEffects?.conversionBoost ?? 0)
-      );
+    if (target.isLeader) return;
+    const baseBlock = 0.15;
+    const resist = Math.max(0, baseBlock + (target.leaderEffects?.conversionResistance ?? 0) + (target.frameEffects?.conversionResistance ?? 0) - (actor.frameEffects?.conversionBoost ?? 0));
     if (Math.random() < resist) return;
+
     if (!kills.has(target.id)) {
       conversions.set(target.id, action.party);
-      actor.triggerAttack = true;
+      actor.triggerAttack = true; // L'agresseur attaque pour convertir
       if (actor.stats) actor.stats.conversionsDone = (actor.stats.conversionsDone ?? 0) + 1;
     }
+
   } else if (action.type === "selfKill") {
     kills.add(actor.id);
-    if (actor.stats) actor.stats.damageTaken = (actor.stats.damageTaken ?? 0) + 1;
   }
 }
 
