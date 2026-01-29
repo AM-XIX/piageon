@@ -1,0 +1,154 @@
+.pigeon-hud{
+  position: absolute;
+  top: 5%;
+  left: 4%;
+  width: 260px;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+
+  padding: 10px;
+  border-radius: 12px;
+
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+
+  color: #f4fbff;
+
+  background: rgba(180, 220, 255, 0.08); 
+  border: 1px solid rgba(220, 240, 255, 0.35);
+  backdrop-filter: blur(6px);
+
+  text-shadow: 0 0 6px rgba(200,230,255,0.45);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+/* Sections */
+.hud-section{
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+
+  background: rgba(200, 230, 255, 0.10);
+  border: 1px solid rgba(220, 240, 255, 0.25);
+}
+
+/* Titres */
+.hud-title{
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: #ffffff;
+  letter-spacing: .12em;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+/* Stats */
+.hud-metric{
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+
+.hud-label{
+  font-size: 11px;
+  color: #e6f4ff;
+  font-weight: 650;
+  letter-spacing: .06em;
+
+  text-shadow:
+    0 0 8px rgba(160,210,255,0.55),
+}
+
+
+
+.hud-value{
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Partis */
+.party-list{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.party-row{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 5px 6px;
+  border-radius: 8px;
+
+  background: rgba(180, 220, 255, 0.08);
+  border: 1px solid rgba(150, 200, 255, 0.18);
+}
+
+.party-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(230,245,255,0.8);
+  box-shadow: 0 0 6px rgba(180,220,255,0.6);
+}
+
+.party-name{
+  flex: 1;
+  font-size: 11px;
+  color: #e6f4ff;
+  font-weight: 650;
+  letter-spacing: .06em;
+
+  text-shadow:
+    0 0 8px rgba(160,210,255,0.55),
+}
+
+.party-count{
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+
+/* ===================== */
+/* Responsive            */
+/* ===================== */
+
+/* Tablette / petits laptops */
+@media (max-width: 900px){
+  .pigeon-hud{
+    width: 240px;
+    top: 4%;
+    left: 3%;
+    padding: 9px;
+  }
+  .hud-title{ font-size: 12px; }
+  .hud-label, .party-name, .party-count{ font-size: 10.5px; }
+}
+
+/* Téléphone */
+@media (max-width: 600px){
+  .pigeon-hud{
+    width: min(92vw, 340px);
+    left: 50%;
+    top: auto;
+    bottom: 14px;
+    transform: translateX(-50%);
+
+    max-height: 42vh; /* évite de bouffer l’écran */
+    padding: 10px;
+  }
+}
+
+/* Très petit / paysage */
+@media (max-width: 360px), (max-height: 520px){
+  .pigeon-hud{
+    max-height: 36vh;
+    padding: 8px;
+  }
+  .hud-section{
+    padding: 7px;
+    margin-bottom: 7px;
+  }
+}
