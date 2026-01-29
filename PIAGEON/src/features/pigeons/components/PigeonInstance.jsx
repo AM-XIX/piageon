@@ -1,34 +1,44 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text } from "@react-three/drei";
+import { Text, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
+import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { PARTY_COLORS } from "../simulation/genetics.js";
 import { selectAgent } from "../state/selectionStore.js";
 
-export function PigeonInstance({ agent, baseScene }) {
+export function PigeonInstance({ agent, baseScene, animations }) {
+  const groupRef = useRef();
+  
   const model = useMemo(() => {
-    const clone = baseScene.clone();
-    clone.scale.setScalar(0.18); // pigeons plus petits
+    const clone = SkeletonUtils.clone(baseScene);
+    clone.scale.setScalar(0.18);
     return clone;
   }, [baseScene]);
-  const bounds = useMemo(() => {
+
+  const { actions } = useAnimations(animations, groupRef);
+
+  useEffect(() => {
+    const action = actions["Flying"] || actions[Object.keys(actions)[0]];
+    if (action) {
+      action.reset().fadeIn(0.5).play();
+      action.time = Math.random() * action.getClip().duration; 
+    }
+  }, [actions]);
+
+  const { bounds, footOffset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
-    return { box, size };
+    const yOffset = -box.min.y;
+    return { bounds: { box, size }, footOffset: yOffset };
   }, [model]);
-  const footOffset = useMemo(() => -bounds.box.min.y, [bounds]);
-  const ref = useRef();
 
-  // permet de recolorer le pigeon selon sa faction
   useEffect(() => {
     const fallback = PARTY_COLORS.neutral || "#cccccc";
     model.traverse((node) => {
       if (node.isMesh && node.material) {
         node.material = node.material.clone();
         const color = PARTY_COLORS[agent.party] || fallback;
-        if (node.material.color) {
-          node.material.color.set(color);
-        }
+        if (node.material.color) node.material.color.set(color);
         if (node.material.emissive) {
           node.material.emissive.set(color);
           node.material.emissiveIntensity = 0.4;
@@ -38,30 +48,26 @@ export function PigeonInstance({ agent, baseScene }) {
   }, [model, agent.party]);
 
   useFrame(() => {
-    if (!ref.current) return;
+    if (!groupRef.current) return;
 
     const speed = agent.velocity.length();
     if (speed > 0.001) {
       const dir = agent.velocity.clone().normalize();
       const target = agent.position.clone().add(dir);
-      target.y = ref.current.position.y; // keep head level
-      ref.current.lookAt(target);
+      target.y = groupRef.current.position.y; 
+      groupRef.current.lookAt(target);
     }
 
-    ref.current.position.copy(agent.position);
-    ref.current.position.y = agent.position.y + footOffset;
+    groupRef.current.position.copy(agent.position);
+    groupRef.current.position.y = agent.position.y + footOffset;
   });
 
   const leaderLabel = agent.leaderType
     ? agent.leaderType.charAt(0).toUpperCase() + agent.leaderType.slice(1)
     : "Leader";
 
-  const handleClick = () => {
-    selectAgent(agent);
-  };
-
   return (
-    <group ref={ref} onClick={handleClick}>
+    <group ref={groupRef} onClick={() => selectAgent(agent)}>
       <primitive object={model} />
       {agent.isLeader && (
         <Text

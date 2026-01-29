@@ -19,7 +19,8 @@ export function PigeonFlock({
     timeScale,
     groundY,
   });
-  const { scene } = usePigeonModel();
+  
+  const { scene, animations } = usePigeonModel(); 
   const accumRef = useRef(0);
 
   useFrame((_, dt) => {
@@ -36,6 +37,7 @@ export function PigeonFlock({
           key={agent.id}
           agent={agent}
           baseScene={scene}
+          animations={animations}
         />
       ))}
     </group>
