@@ -1,25 +1,25 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { generateLSystem, bushParams } from '../simulation/lSystemGenerator';
 
 const Branch = ({ start, end, radius }) => {
   const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-  const direction = new THREE.Vector3().subVectors(end, start);
-  const height = direction.length();
+  const height = start.distanceTo(end);
   
   return (
     <mesh position={midpoint} onUpdate={(self) => self.lookAt(end)}>
-      <cylinderGeometry args={[radius * 1.1, radius, height, 6]} />
-      <meshStandardMaterial color="#472912" />
+      <cylinderGeometry args={[radius, radius, height, 5, 1]} />
+      <meshStandardMaterial color="#5d4037" flatShading={true} roughness={1} />
     </mesh>
   );
 };
 
 export const Bush = ({ position, scale = 1, seed = 0 }) => {
-  const { branches, leaves } = useMemo(() => {
+  const { branches, leaves, grass } = useMemo(() => {
     const lString = generateLSystem(2); 
     const { angle, length } = bushParams;
-    
+    const segmentLen = length * 1.9; 
+
     const branches = [];
     const leaves = [];
     let currentPos = new THREE.Vector3(0, 0, 0);
@@ -29,11 +29,9 @@ export const Bush = ({ position, scale = 1, seed = 0 }) => {
     for (let char of lString) {
       if (char === "F") {
         const dir = new THREE.Vector3(0, 1, 0).applyQuaternion(currentQuat);
-        const nextPos = currentPos.clone().add(dir.multiplyScalar(length));
+        const nextPos = currentPos.clone().add(dir.multiplyScalar(segmentLen));
         branches.push({ start: currentPos.clone(), end: nextPos.clone() });
-        
-        if (Math.random() > 0.3) leaves.push({ pos: currentPos.clone(), type: 'mid' });
-        
+        if (Math.random() > 0.7) leaves.push({ pos: currentPos.clone(), type: 'mid' });
         currentPos = nextPos;
       } else if (char === "+") {
         currentQuat.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle + (Math.random() * 0.1)));
@@ -51,33 +49,58 @@ export const Bush = ({ position, scale = 1, seed = 0 }) => {
         currentQuat = state.quat;
       }
     }
-    return { branches, leaves };
+
+    const grass = [];
+    const grassCount = 25 + Math.floor(Math.random() * 25); 
+
+    for (let i = 0; i < grassCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random()) * 2.5; 
+      
+      const x = Math.cos(theta) * r;
+      const z = Math.sin(theta) * r;
+      
+      grass.push({
+        x, z,
+        height: 0.5 + Math.random() * 0.2, 
+        rotY: Math.random() * Math.PI,
+        rotX: (Math.random() - 0.5) * 0.4, 
+        rotZ: (Math.random() - 0.5) * 0.4,
+        color: Math.random() > 0.5 ? "#4caf50" : "#47754a" 
+      });
+    }
+
+    return { branches, leaves, grass };
   }, [seed]);
 
   return (
     <group position={position} scale={scale}>
       {branches.map((b, i) => (
-        <Branch key={i} start={b.start} end={b.end} radius={0.06} />
+        <Branch key={`b-${i}`} start={b.start} end={b.end} radius={0.08} />
       ))}
       
       {leaves.map((leaf, i) => {
-        // ----- SCALING
-        const randomScale = [
-          0.6 + Math.random() * 0.8, 
-          0.4 + Math.random() * 0.6, 
-          0.6 + Math.random() * 0.8 
-        ];
-
+        const randomScale = 0.8 + Math.random() * 0.6;
+        const baseSize = leaf.type === 'tip' ? 1.0 : 0.6;
         return (
-          <mesh key={`l-${i}`} position={leaf.pos} scale={randomScale}>
-            <sphereGeometry args={[leaf.type === 'tip' ? 0.7 : 0.4, 8, 8]} />
-            <meshStandardMaterial 
-              color={i % 2 === 0 ? "#2e7d32" : "#388e3c"} 
-              roughness={1} 
-            />
+          <mesh key={`l-${i}`} position={leaf.pos} scale={[randomScale, randomScale, randomScale]}>
+            <icosahedronGeometry args={[baseSize, 0]} />
+            <meshStandardMaterial color={i % 2 === 0 ? "#2e7d32" : "#43a047"} flatShading={true} roughness={1} />
           </mesh>
         );
       })}
+
+      {/* --- RENDU DE L'HERBE --- */}
+      {grass.map((g, i) => (
+        <mesh 
+          key={`g-${i}`} 
+          position={[g.x, g.height / 2, g.z]} 
+          rotation={[g.rotX, g.rotY, g.rotZ]} 
+        >
+          <coneGeometry args={[0.15, g.height, 3]} />
+          <meshStandardMaterial color={g.color} flatShading={true} roughness={1} />
+        </mesh>
+      ))}
     </group>
   );
 };
