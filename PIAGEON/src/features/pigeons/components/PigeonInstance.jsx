@@ -8,58 +8,84 @@ import { selectAgent } from "../state/selectionStore.js";
 
 export function PigeonInstance({ agent, baseScene, animations }) {
   const groupRef = useRef();
-  
+
   const model = useMemo(() => {
     const clone = SkeletonUtils.clone(baseScene);
     clone.scale.setScalar(0.18);
+    clone.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
     return clone;
   }, [baseScene]);
 
-  const { actions } = useAnimations(animations, groupRef);
+  const { actions, mixer } = useAnimations(animations, groupRef);
 
+  // --- Gestion des Animations ---
   useEffect(() => {
-    const action = actions["Flying"] || actions[Object.keys(actions)[0]];
-    if (action) {
-      action.reset().fadeIn(0.5).play();
-      action.time = Math.random() * action.getClip().duration; 
+    const idleAction = actions["Idle"];
+    if (idleAction) {
+      idleAction.reset().fadeIn(0.5).play();
+      // Désynchronisation pour éviter que tous les pigeons battent des ailes en même temps
+      idleAction.time = Math.random() * idleAction.getClip().duration;
     }
-  }, [actions]);
 
-  const { bounds, footOffset } = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(model);
-    const size = box.getSize(new THREE.Vector3());
-    const yOffset = -box.min.y;
-    return { bounds: { box, size }, footOffset: yOffset };
-  }, [model]);
-
-  useEffect(() => {
-    const fallback = PARTY_COLORS.neutral || "#cccccc";
-    model.traverse((node) => {
-      if (node.isMesh && node.material) {
-        node.material = node.material.clone();
-        const color = PARTY_COLORS[agent.party] || fallback;
-        if (node.material.color) node.material.color.set(color);
-        if (node.material.emissive) {
-          node.material.emissive.set(color);
-          node.material.emissiveIntensity = 0.4;
-        }
+    const onFinished = (e) => {
+      // Retour à l'Idle après une attaque
+      if (idleAction && e.action !== idleAction) {
+        idleAction.reset().fadeIn(0.25).play();
+        e.action.fadeOut(0.25);
       }
-    });
-  }, [model, agent.party]);
+    };
+    
+    mixer.addEventListener("finished", onFinished);
+    return () => mixer.removeEventListener("finished", onFinished);
+  }, [actions, mixer]);
 
   useFrame(() => {
     if (!groupRef.current) return;
 
+    // Déclenchement Attaque
+    if (agent.triggerAttack) {
+      agent.triggerAttack = false;
+      const attack = actions["Attack"];
+      
+      if (attack) {
+        mixer.stopAllAction();
+        attack.reset().setLoop(THREE.LoopOnce).fadeIn(0.05).play();
+      }
+    }
+
+    // Mouvement
     const speed = agent.velocity.length();
     if (speed > 0.001) {
       const dir = agent.velocity.clone().normalize();
       const target = agent.position.clone().add(dir);
-      target.y = groupRef.current.position.y; 
+      target.y = groupRef.current.position.y;
       groupRef.current.lookAt(target);
     }
 
+    // Couleurs
+    const targetColor = new THREE.Color(PARTY_COLORS[agent.party] || "#cccccc");
+    model.traverse((node) => {
+      if (node.isMesh && node.material) {
+        if (!node.userData.isCloned) {
+          node.material = node.material.clone();
+          node.userData.isCloned = true;
+        }
+        node.material.color.lerp(targetColor, 0.1);
+        if (node.material.emissive) {
+          node.material.emissive.lerp(targetColor, 0.1);
+          node.material.emissiveIntensity = 0.4;
+        }
+      }
+    });
+
+    // Position & Offset Hauteur
     groupRef.current.position.copy(agent.position);
-    groupRef.current.position.y = agent.position.y + footOffset;
+    groupRef.current.position.y = agent.position.y + 1.8;
   });
 
   const leaderLabel = agent.leaderType
@@ -71,12 +97,12 @@ export function PigeonInstance({ agent, baseScene, animations }) {
       <primitive object={model} />
       {agent.isLeader && (
         <Text
-          position={[0, bounds.box.max.y + bounds.size.y * 0.2, 0]}
-          fontSize={bounds.size.y * 0.12}
+          position={[0, 2.8, 0]}
+          fontSize={0.5}
           color="#ffffff"
           anchorX="center"
           anchorY="bottom"
-          outlineWidth={bounds.size.y * 0.01}
+          outlineWidth={0.05}
           outlineColor="#000000"
         >
           {leaderLabel}

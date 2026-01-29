@@ -450,6 +450,7 @@ function applyAction(action, actor, target, kills, conversions, actorCounts) {
       const attackers = actorCounts?.[actor.party] ?? 1;
       if (attackers < 3) return; // leader tombe seulement sous attaque groupée
       kills.add(target.id); // pas de bouclier pour leaders une fois encerclés
+      actor.triggerAttack = true;
     } else {
       const shield =
         Math.max(
@@ -460,6 +461,7 @@ function applyAction(action, actor, target, kills, conversions, actorCounts) {
         );
       if (Math.random() < shield) return;
       kills.add(target.id);
+      actor.triggerAttack = true;
     }
     if (actor.stats) actor.stats.kills = (actor.stats.kills ?? 0) + 1;
     if (target.stats) target.stats.damageTaken = (target.stats.damageTaken ?? 0) + 1;
@@ -477,6 +479,7 @@ function applyAction(action, actor, target, kills, conversions, actorCounts) {
     if (Math.random() < resist) return;
     if (!kills.has(target.id)) {
       conversions.set(target.id, action.party);
+      actor.triggerAttack = true;
       if (actor.stats) actor.stats.conversionsDone = (actor.stats.conversionsDone ?? 0) + 1;
     }
   } else if (action.type === "selfKill") {
