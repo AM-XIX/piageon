@@ -6,30 +6,42 @@ import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { PARTY_COLORS } from "../simulation/genetics.js";
 import { selectAgent } from "../state/selectionStore.js";
 
+const _targetColor = new THREE.Color();
+const _dummy = new THREE.Object3D();
+const _lookTarget = new THREE.Vector3();
+
 export function PigeonInstance({ agent, baseScene, animations }) {
   const groupRef = useRef();
   const displayedPartyRef = useRef(agent.party);
 
-  const model = useMemo(() => {
+  const { model, skinnedMeshes } = useMemo(() => {
     const clone = SkeletonUtils.clone(baseScene);
-    clone.scale.setScalar(0.18);
+    clone.scale.setScalar(0.15);
+    
+    const meshes = [];
+
     clone.traverse((obj) => {
       if (obj.isMesh) {
         obj.castShadow = true;
         obj.receiveShadow = true;
+        
         if (obj.material) {
+          obj.material = obj.material.clone();
           obj.material.transparent = true;
-          obj.material.opacity = 1; 
+          obj.material.depthWrite = true; 
         }
+        
+        meshes.push(obj);
       }
     });
-    return clone;
+
+    return { model: clone, skinnedMeshes: meshes };
   }, [baseScene]);
 
   const { actions, mixer } = useAnimations(animations, groupRef);
 
-  // Gestion des Animations
   useEffect(() => {
+    // Démarrage aléatoire de l'Idle
     const idle = actions["Idle"];
     if (idle) {
       idle.reset().fadeIn(0.5).play();
@@ -58,50 +70,39 @@ export function PigeonInstance({ agent, baseScene, animations }) {
     return () => mixer.removeEventListener("finished", onFinished);
   }, [actions, mixer, agent.party]);
 
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Triggers d'animations
     if (agent.triggerDeath) {
       agent.triggerDeath = false;
       mixer.stopAllAction();
       const dieAnim = actions["Dies"];
       if (dieAnim) dieAnim.reset().setLoop(THREE.LoopOnce).setEffectiveTimeScale(1).fadeIn(0.1).play();
-    } else if (agent.triggerConvert) {
+    } 
+    else if (agent.triggerConvert) {
       agent.triggerConvert = false;
       const convertAnim = actions["Converts"];
-      const idle = actions["Idle"];
-      const walk = actions["Walk"];
-      
-      if (convertAnim) {
-        if (idle) idle.fadeOut(0.2);
-        if (walk) walk.fadeOut(0.2);
-        convertAnim.reset().setLoop(THREE.LoopOnce).fadeIn(0.1).play();
-      } else {
-        displayedPartyRef.current = agent.party;
-      }
-    } else if (agent.triggerAttack) {
+      actions["Idle"]?.fadeOut(0.2);
+      actions["Walk"]?.fadeOut(0.2);
+      if (convertAnim) convertAnim.reset().setLoop(THREE.LoopOnce).fadeIn(0.1).play();
+      else displayedPartyRef.current = agent.party;
+    } 
+    else if (agent.triggerAttack) {
       agent.triggerAttack = false;
       const attackAnim = actions["Attack"];
-      const idle = actions["Idle"];
-      const walk = actions["Walk"];
-      
-      if (attackAnim) {
-        if (idle) idle.fadeOut(0.2);
-        if (walk) walk.fadeOut(0.2);
-        attackAnim.reset().setLoop(THREE.LoopOnce).fadeIn(0.1).play();
-      }
+      actions["Idle"]?.fadeOut(0.2);
+      actions["Walk"]?.fadeOut(0.2);
+      if (attackAnim) attackAnim.reset().setLoop(THREE.LoopOnce).fadeIn(0.1).play();
     }
 
-    // Gestion Walk vs Idle
     const isActionPlaying = 
       (actions["Attack"]?.isRunning()) || 
       (actions["Converts"]?.isRunning()) || 
       (actions["Dies"]?.isRunning());
 
     if (!isActionPlaying && agent.state !== "dying") {
-      const speed = agent.velocity.length();
-      const isMoving = speed > 0.1;
+      const speedSq = agent.velocity.lengthSq(); 
+      const isMoving = speedSq > 0.01;
       const walkAnim = actions["Walk"];
       const idleAnim = actions["Idle"];
 
@@ -114,40 +115,38 @@ export function PigeonInstance({ agent, baseScene, animations }) {
       }
     }
 
-    // Physique et Position
+    groupRef.current.position.copy(agent.position);
+    
+    groupRef.current.position.y = agent.position.y + 0.85;
+
     if (agent.state !== "dying") {
-      const speed = agent.velocity.length();
-      if (speed > 0.001) {
-        const dir = agent.velocity.clone().normalize();
-        const target = agent.position.clone().add(dir);
-        target.y = groupRef.current.position.y;
-        groupRef.current.lookAt(target);
+      const speedSq = agent.velocity.lengthSq();
+      if (speedSq > 0.01) {
+        _lookTarget.copy(agent.position).add(agent.velocity);
+        _lookTarget.y = groupRef.current.position.y; // Garder l'horizon plat
+        
+        _dummy.position.copy(groupRef.current.position);
+        _dummy.lookAt(_lookTarget);
+        
+        groupRef.current.quaternion.slerp(_dummy.quaternion, 0.15);
       }
-      groupRef.current.position.copy(agent.position);
-      groupRef.current.position.y = agent.position.y + 0.85; 
     }
 
-    // Fade-in à la naissance
     const age = agent.age || 0;
     const opacity = agent.state === "dying" ? 1 : Math.min(age / 1.0, 1);
+    const colorHex = PARTY_COLORS[displayedPartyRef.current] || "#cccccc";
+    _targetColor.set(colorHex);
 
-    const currentParty = displayedPartyRef.current;
-    const targetColor = new THREE.Color(PARTY_COLORS[currentParty] || "#cccccc");
-    
-    model.traverse((node) => {
-      if (node.isMesh && node.material) {
-        if (!node.userData.isCloned) {
-          node.material = node.material.clone();
-          node.userData.isCloned = true;
-        }
-        node.material.color.lerp(targetColor, 0.1);
-        node.material.opacity = opacity;
-        if (node.material.emissive) {
-          node.material.emissive.lerp(targetColor, 0.1);
-          node.material.emissiveIntensity = 0.4;
-        }
+    for (let i = 0; i < skinnedMeshes.length; i++) {
+      const mat = skinnedMeshes[i].material;
+      mat.color.lerp(_targetColor, 0.1);
+      mat.opacity = opacity;
+      
+      if (mat.emissive) {
+        mat.emissive.lerp(_targetColor, 0.1);
+        mat.emissiveIntensity = 0.4;
       }
-    });
+    }
   });
 
   const leaderLabel = agent.leaderType
@@ -155,7 +154,7 @@ export function PigeonInstance({ agent, baseScene, animations }) {
     : "Leader";
 
   return (
-    <group ref={groupRef} onClick={() => selectAgent(agent)}>
+    <group ref={groupRef} onClick={(e) => { e.stopPropagation(); selectAgent(agent); }}>
       <primitive object={model} />
       {agent.isLeader && agent.state !== "dying" && (
         <Text

@@ -7,7 +7,7 @@ import { useRef } from "react";
 
 export function PigeonFlock({
   initialCount = 60,
-  interactionRadius = 5,
+  interactionRadius = 1.2,
   worldHalfSize = 35,
   timeScale = 1,
   groundY = 18,
