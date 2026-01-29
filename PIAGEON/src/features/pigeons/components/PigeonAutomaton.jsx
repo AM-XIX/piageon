@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { usePigeonModel } from "../model/usePigeonModel.js";
 import { initCells, stepCells } from "../simulation/cells.js";
 
-const N = 40;
+const N = 35;
 const CELL_SIZE = 0.7;
 const TICK_INTERVAL = 0.25;
 
