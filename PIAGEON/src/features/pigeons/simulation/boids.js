@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { getBoidParamsForCluster } from "./brain.js";
+import { neuralSteeringStep } from "./neuralNetworks.js";
 import { IDX_MAX_FORCE, IDX_MAX_SPEED, IDX_PERCEPTION, IDX_W_ALI, IDX_W_COH, IDX_W_SEP } from "./genetics.js";
 
 const WORLD_HALF_SIZE = 40;
@@ -135,6 +136,8 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, m
     steerToward(desired, p.velocity, maxSpeed, maxForce);
     steering.add(desired.multiplyScalar(0.5));
   }
+
+  steering.add(neuralSteeringStep(p, agents, { perception, maxForce, maxSpeed }));
 
   limitVector(steering, maxForce * 3);
   steering.y = 0;
