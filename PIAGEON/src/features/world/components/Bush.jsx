@@ -18,7 +18,7 @@ export const Bush = ({ position, scale = 1, seed = 0 }) => {
   const { branches, leaves, grass } = useMemo(() => {
     const lString = generateLSystem(2); 
     const { angle, length } = bushParams;
-    const segmentLen = length * 1.9; 
+    const segmentLen = length * 2.9; 
 
     const branches = [];
     const leaves = [];
