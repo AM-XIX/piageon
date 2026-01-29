@@ -50,8 +50,8 @@ export function randomParty() {
 }
 
 // bornes des gènes
-const MIN_GENES = [0.4, 0.15, 0.15, 0.6, 0.6, 0.01];
-const MAX_GENES = [2.0, 1.6, 1.6, 1.6, 1.4, 0.08];
+const MIN_GENES = [0.4, 0.15, 0.15, 0.6, 0.6, 0.03]; 
+const MAX_GENES = [2.0, 1.6, 1.6, 1.6, 1.4, 0.1];
 
 // création d'un génome aléatoire
 export function createRandomGenome() {

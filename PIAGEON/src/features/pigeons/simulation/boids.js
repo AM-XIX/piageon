@@ -5,7 +5,8 @@ import { IDX_MAX_FORCE, IDX_MAX_SPEED, IDX_PERCEPTION, IDX_W_ALI, IDX_W_COH, IDX
 
 const WORLD_HALF_SIZE = 40;
 const GROUND_Y = 18;
-const PERSONAL_SPACE = 0.4; 
+
+const PERSONAL_SPACE = 0.7; 
 
 const tmpVec = new THREE.Vector3();
 const tmpVec2 = new THREE.Vector3();
@@ -53,7 +54,8 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
 }
 
 function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, motion) {
-  const perception = Math.min(p.genome[IDX_PERCEPTION] ?? 1.2, 1.5);
+  const perception = Math.min(p.genome[IDX_PERCEPTION] ?? 1.5, 3.0); // Limite max de perception
+  
   const maxForce = p.genome[IDX_MAX_FORCE] ?? 0.05;
   const maxSpeed = Math.min(params.maxSpeed, p.genome[IDX_MAX_SPEED] ?? params.maxSpeed);
 
@@ -72,12 +74,13 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, m
 
     if (dist < PERSONAL_SPACE && dist > 0) {
        const push = p.position.clone().sub(other.position).normalize();
-       separation.add(push.multiplyScalar(8.0)); 
+       separation.add(push.multiplyScalar(10.0 / dist)); 
     }
 
     if (dist > 0 && dist < perception) {
       neighbors++;
 
+      // Séparation normale (douce)
       if (dist >= PERSONAL_SPACE) {
           const diff = other.position.clone().sub(p.position).multiplyScalar(-1 / (dist * dist));
           separation.add(diff);
@@ -106,14 +109,14 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, m
     steerToward(cohesion, p.velocity, maxSpeed, maxForce);
     cohesion.multiplyScalar(params.wCoh * p.genome[IDX_W_COH]);
 
-    steerToward(separation, p.velocity, maxSpeed, maxForce);
-    separation.multiplyScalar(params.wSep * p.genome[IDX_W_SEP]);
+    steerToward(separation, p.velocity, maxSpeed, maxForce * 1.5);
+    separation.multiplyScalar(params.wSep * p.genome[IDX_W_SEP] * 1.3); // Bonus multiplicateur pour séparation
 
     steering.add(separation).add(alignment).add(cohesion);
   } else {
     if (separation.lengthSq() > 0) {
-       steerToward(separation, p.velocity, maxSpeed, maxForce);
-       separation.multiplyScalar(params.wSep * p.genome[IDX_W_SEP] * 2.0);
+       steerToward(separation, p.velocity, maxSpeed, maxForce * 1.5);
+       separation.multiplyScalar(params.wSep * p.genome[IDX_W_SEP] * 1.3);
        steering.add(separation);
     }
   }
@@ -139,7 +142,7 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, m
 
   steering.add(neuralSteeringStep(p, agents, { perception, maxForce, maxSpeed }));
 
-  limitVector(steering, maxForce * 3);
+  limitVector(steering, maxForce * 5); 
   steering.y = 0;
   return steering;
 }
@@ -166,7 +169,7 @@ function steerToBounds(agent, maxSpeed, maxForce, halfSize) {
 
   if (desired.lengthSq() === 0) return desired;
 
-  return steerToward(desired, agent.velocity, maxSpeed, maxForce);
+  return steerToward(desired, agent.velocity, maxSpeed, maxForce * 2.0);
 }
 
 function randomFlatVector() {

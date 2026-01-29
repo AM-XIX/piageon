@@ -6,9 +6,9 @@ import { computePigeonStats } from "../state/pigeonStore.js";
 import { useRef } from "react";
 
 export function PigeonFlock({
-  initialCount = 100,
-  interactionRadius = 0.6,
-  worldHalfSize = 40,
+  initialCount = 60,
+  interactionRadius = 5,
+  worldHalfSize = 35,
   timeScale = 1,
   groundY = 18,
 }) {
