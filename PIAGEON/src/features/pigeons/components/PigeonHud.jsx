@@ -1,6 +1,15 @@
 import { useMemo } from "react";
 import { PARTIES, PARTY_COLORS } from "../simulation/genetics.js";
 import { usePigeonStats } from "../state/pigeonStore.js";
+import "./gamemenu.css";
+
+//Mettre sur pause
+//Légende des partis OK
+//Recommencer
+//Accélérarion
+//Légende flèches
+//Drag pour rotate
+//Compteur de partis OK
 
 export function PigeonHud() {
   const stats = usePigeonStats();
