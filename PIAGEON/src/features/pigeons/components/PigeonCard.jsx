@@ -49,12 +49,10 @@ export function PigeonCard() {
       <div className="card-section">
         <div className="card-subtitle">Stats</div>
         <div className="card-grid">
-          <Stat label="Vies" value={agent.stats.timeAlive.toFixed(1)} />
           <Stat label="Kills" value={agent.stats.kills} />
           <Stat label="Conversions" value={agent.stats.conversionsDone} />
           <Stat label="Dégâts subis" value={agent.stats.damageTaken} />
           <Stat label="Énergie" value={agent.stats.energySpent.toFixed(1)} />
-          <Stat label="Nourriture" value={agent.stats.foodEaten} />
         </div>
       </div>
     </div>

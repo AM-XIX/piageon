@@ -51,7 +51,7 @@ export function PigeonHud() {
                 className="party-dot"
                 style={{ backgroundColor: p.color }}
               />
-              <span className="party-name">{p.id}</span>
+              <span className="party-name">{p.id.charAt(0).toUpperCase() + p.id.slice(1)}</span>
               <span className="party-count">{p.count}</span>
             </div>
           ))}
