@@ -53,6 +53,18 @@ export function selectAgent(agent) {
   emit();
 }
 
+export function updateSelectedData(agent) {
+  if (!selected || selected.id !== agent.id) return;
+
+  selected = {
+    ...selected,
+    age: agent.age,
+    position: { x: agent.position.x, y: agent.position.y, z: agent.position.z },
+    stats: { ...agent.stats }
+  };
+  emit();
+}
+
 export function useSelectedAgent() {
   return useSyncExternalStore(subscribeSelection, getSelection);
 }

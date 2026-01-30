@@ -3,6 +3,7 @@ import { usePigeonModel } from "../hooks/usePigeonModel.js";
 import { PigeonInstance } from "./PigeonInstance.jsx";
 import { useFrame } from "@react-three/fiber";
 import { computePigeonStats } from "../state/pigeonStore.js";
+import { getSelection, updateSelectedData } from "../state/selectionStore.js";
 import { useRef } from "react";
 
 export function PigeonFlock({
@@ -23,11 +24,28 @@ export function PigeonFlock({
   const { scene, animations } = usePigeonModel(); 
   const accumRef = useRef(0);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
+    agentsRef.current.forEach(agent => {
+      agent.age += dt * timeScale;
+    });
+
     accumRef.current += dt;
-    if (accumRef.current < 0.25) return;
-    accumRef.current = 0;
-    computePigeonStats(agentsRef.current);
+    
+    if (accumRef.current >= 0.1) {
+      accumRef.current = 0;
+
+      // Mise à jour globale (HUD)
+      computePigeonStats(agentsRef.current);
+
+      // Mise à jour de l'agent sélectionné (PigeonCard)
+      const currentSelection = getSelection();
+      if (currentSelection) {
+        const realAgent = agentsRef.current.find(a => a.id === currentSelection.id);
+        if (realAgent) {
+          updateSelectedData(realAgent);
+        }
+      }
+    }
   });
 
   return (
