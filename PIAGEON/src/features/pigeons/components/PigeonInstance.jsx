@@ -194,7 +194,7 @@ export function PigeonInstance({ agent, baseScene, animations }) {
 
   return (
     <group ref={groupRef} onClick={() => selectAgent(agent)}>
-      <group position={[0, 0.6, 0]}>
+      <group position={[0, 0.5, 0]}>
         <primitive object={model} />
       </group>
 

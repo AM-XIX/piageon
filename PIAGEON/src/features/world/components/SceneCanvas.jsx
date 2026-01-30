@@ -40,7 +40,7 @@ export function SceneCanvas() {
 
       <Vegetation />
       <Ground />
-      <PigeonFlock timeScale={timeScale} groundY={-0.3} worldHalfSize={16} interactionRadius={1.2} />
+      <PigeonFlock timeScale={timeScale} groundY={-0} worldHalfSize={16} interactionRadius={1.2} />
       
     </Canvas>
   );
