@@ -6,6 +6,7 @@ import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 import { PARTY_COLORS } from "../simulation/genetics.js";
 import { selectAgent } from "../state/selectionStore.js";
 
+// --- Définition du Shader pour le Halo ---
 const HaloMaterialImpl = shaderMaterial(
   { uColor: new THREE.Color(1, 1, 1), uOpacity: 1.0 },
   // Vertex Shader
@@ -22,13 +23,9 @@ const HaloMaterialImpl = shaderMaterial(
     uniform float uOpacity;
     varying vec2 vUv;
     void main() {
-      // Distance du centre (0.5, 0.5)
       float dist = length(vUv - vec2(0.5));
-      // Inversion : 1.0 au centre, 0.0 aux bords. Le '2.0' ajuste le rayon.
       float alpha = smoothstep(0.5, 0.0, dist);
-      // Puissance pour adoucir la courbe
       alpha = pow(alpha, 1.5);
-      
       gl_FragColor = vec4(uColor, alpha * uOpacity);
     }
   `
@@ -45,7 +42,10 @@ export function PigeonInstance({ agent, baseScene, animations }) {
 
   const model = useMemo(() => {
     const clone = SkeletonUtils.clone(baseScene);
-    clone.scale.setScalar(0.12);
+    
+    const finalScale = agent.isLeader ? 0.22 : 0.12;
+    clone.scale.setScalar(finalScale);
+    
     clone.traverse((obj) => {
       if (obj.isMesh) {
         obj.castShadow = true;
@@ -59,7 +59,7 @@ export function PigeonInstance({ agent, baseScene, animations }) {
       }
     });
     return clone;
-  }, [baseScene]);
+  }, [baseScene, agent.isLeader]);
 
   const { actions, mixer } = useAnimations(animations, groupRef);
 
@@ -192,9 +192,12 @@ export function PigeonInstance({ agent, baseScene, animations }) {
     ? agent.leaderType.charAt(0).toUpperCase() + agent.leaderType.slice(1)
     : "Leader";
 
+  // Hauteur dynamique : 0.4 pour les petits, ~0.72 pour les leaders à 0.22 scale
+  const modelYOffset = agent.isLeader ? 0.72 : 0.4;
+
   return (
     <group ref={groupRef} onClick={() => selectAgent(agent)}>
-      <group position={[0, 0.5, 0]}>
+      <group position={[0, modelYOffset, 0]}>
         <primitive object={model} />
       </group>
 
