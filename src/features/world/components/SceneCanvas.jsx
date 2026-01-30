@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { CameraRig } from "./CameraRig.jsx";
-import { Vegetation } from "./Vegetation";
+import { Vegetation } from "./Vegetation.jsx";
 import { Ground } from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
 import { PigeonFlock } from "../../pigeons/components/PigeonFlock.jsx";
