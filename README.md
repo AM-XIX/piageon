@@ -6,7 +6,7 @@
 
 ## Le Projet
 **Piageon** est un monde virtuel conçu pour explorer l'interaction entre plusieurs modèles algorithmiques. Le projet propose une exploration libre d'une île où des pigeons autonomes évoluent, s'organisent et s'affrontent sur le terrain politique.<br>
-[Présentation](https://www.figma.com/deck/DUGsyRDwxaQwB1xq0HdGjF/PIAGEON?node-id=1-42&t=nFXCsQVsOrCzKDZA-1) et lien du projet à venir.
+[Présentation](https://www.figma.com/deck/DUGsyRDwxaQwB1xq0HdGjF/PIAGEON?node-id=1-42&t=nFXCsQVsOrCzKDZA-1) et [lien](https://piageon.netlify.app/) du projet.
 
 ### Direction Artistique
 * **Style** : Low-poly (formes simples, géométrie apparente).
