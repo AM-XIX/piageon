@@ -17,6 +17,8 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
     const motion = updateLocomotionState(p, dt);
     const params = getBoidParamsForCluster(p.clusterId);
 
+    const dynamicPersonalSpace = p.isLeader ? 1.0 : 0.7;
+
     if (motion.mode === "idle") {
       p.velocity.multiplyScalar(0.9);
       limitVector(p.velocity, params.maxSpeed * 0.2);
@@ -32,7 +34,8 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
       params,
       worldHalfSize,
       wanderStrength,
-      motion
+      motion,
+      dynamicPersonalSpace
     );
     p.acceleration.add(steering);
     const frameEnergy = steering.lengthSq() * dt;
@@ -53,7 +56,7 @@ export function updateBoids( agents, dt, { worldHalfSize = WORLD_HALF_SIZE, wand
   }
 }
 
-function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, motion) {
+function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, motion, personalSpace) {
   const perception = Math.min(p.genome[IDX_PERCEPTION] ?? 1.5, 3.0); // Limite max de perception
   
   const maxForce = p.genome[IDX_MAX_FORCE] ?? 0.05;
@@ -72,7 +75,9 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, m
 
     const dist = planarDistance(p.position, other.position);
 
-    if (dist < PERSONAL_SPACE && dist > 0) {
+    const minGate = Math.max(personalSpace, other.isLeader ? 1.0 : 0.7);
+
+    if (dist < minGate && dist > 0) {
        const push = p.position.clone().sub(other.position).normalize();
        separation.add(push.multiplyScalar(10.0 / dist)); 
     }
@@ -81,7 +86,7 @@ function computeBoidSteering(p, agents, params, worldHalfSize, wanderStrength, m
       neighbors++;
 
       // Séparation normale (douce)
-      if (dist >= PERSONAL_SPACE) {
+      if (dist >= minGate) {
           const diff = other.position.clone().sub(p.position).multiplyScalar(-1 / (dist * dist));
           separation.add(diff);
       }
