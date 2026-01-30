@@ -5,6 +5,7 @@ import { Vegetation } from "./Vegetation";
 import { Ground } from "./Ground.jsx";
 import { SkyBox } from "./SkyBox.jsx";
 import { PigeonFlock } from "../../pigeons/components/PigeonFlock.jsx";
+import { FlyingPigeons } from "./FlyingPigeons.jsx";
 
 export function SceneCanvas() {
   const [timeScale, setTimeScale] = useState(1);
@@ -25,23 +26,24 @@ export function SceneCanvas() {
   }, []);
 
   return (
-    <Canvas camera={{ position: [15, 18, 20], fov: 45 }} dpr={[1, 2]} >
+    <Canvas camera={{ position: [15, 18, 20], fov: 45 }} dpr={[1, 2]}>
 
-      <SkyBox />
+        <SkyBox />
 
-      <CameraRig />
+        <CameraRig />
 
-      <ambientLight intensity={0.65} />
-      <directionalLight
-        position={[20, 30, 10]}
-        intensity={1.3}
-        castShadow
-      />
+        <ambientLight intensity={0.65} />
+        <directionalLight position={[20, 30, 10]} intensity={1.3} castShadow />
 
-      <Vegetation />
-      <Ground />
-      <PigeonFlock timeScale={timeScale} groundY={-0} worldHalfSize={16} interactionRadius={1.2} />
-      
+        <Vegetation />
+        <Ground />
+        <FlyingPigeons count={20} />
+        <PigeonFlock
+          timeScale={timeScale}
+          groundY={-0}
+          worldHalfSize={16}
+          interactionRadius={1.2}
+        />
     </Canvas>
   );
 }
